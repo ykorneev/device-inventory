@@ -1,5 +1,6 @@
 "use client";
 
+import confetti from "canvas-confetti";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Boxes,
@@ -518,17 +519,32 @@ export default function Home() {
     }
   }
 
-  async function confirmReturn() {
-    if (!returnDevice || !loanId) return toast.error("Select an employee");
-    const ok = await runAction(
-      { action: "return", loanId: Number(loanId) },
-      "Device returned to the office",
-    );
-    if (ok) {
-      setReturnDevice(null);
-      setLoanId("");
-    }
+  function celebrateReturn() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
   }
+
+  confetti({
+    particleCount: 70,
+    spread: 70,
+    origin: { y: 0.65 },
+  });
+}
+
+  async function confirmReturn() {
+  if (!returnDevice || !loanId) return toast.error("Select an employee");
+
+  const ok = await runAction(
+    { action: "return", loanId: Number(loanId) },
+    "Device returned to the office",
+  );
+
+  if (ok) {
+    celebrateReturn();
+    setReturnDevice(null);
+    setLoanId("");
+  }
+}
 
   function openReturn(device: Device) {
     setReturnDevice(device);
