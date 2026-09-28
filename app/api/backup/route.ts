@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS devices (
   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
   name TEXT NOT NULL,
   model TEXT NOT NULL,
+  category TEXT DEFAULT 'mobile' NOT NULL,
   os_version TEXT,
   gpu TEXT,
   soc TEXT,
@@ -112,7 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_loans_device_id ON loans (device_id);
 
 ${insertStatements("employees", ["id", "name", "active", "created_at"], employees)}
 
-${insertStatements("devices", ["id", "name", "model", "os_version", "gpu", "soc", "tier", "quantity", "asset_code", "comment", "photo_key", "active", "created_at"], devices)}
+${insertStatements("devices", ["id", "name", "model", "category", "os_version", "gpu", "soc", "tier", "quantity", "asset_code", "comment", "photo_key", "active", "created_at"], devices)}
 
 ${insertStatements("loans", ["id", "device_id", "employee_id", "checked_out_at", "returned_at"], loans)}
 
@@ -125,7 +126,7 @@ function createReadme(generatedAt: string) {
   return `TEST DEVICES — FULL BACKUP
 
 Created: ${generatedAt}
-Format version: 1
+Format version: 2
 
 CONTENTS
 - manifest.json: backup version, counts, and photo metadata.
@@ -219,7 +220,7 @@ export async function GET() {
     const bucket = getR2();
     const [employeesResult, devicesResult, loansResult, photoObjects] = await Promise.all([
       db.prepare("SELECT id, name, active, created_at FROM employees ORDER BY id").all(),
-      db.prepare("SELECT id, name, model, os_version, gpu, soc, tier, quantity, asset_code, comment, photo_key, active, created_at FROM devices ORDER BY id").all(),
+      db.prepare("SELECT id, name, model, category, os_version, gpu, soc, tier, quantity, asset_code, comment, photo_key, active, created_at FROM devices ORDER BY id").all(),
       db.prepare("SELECT id, device_id, employee_id, checked_out_at, returned_at FROM loans ORDER BY id").all(),
       listPhotoObjects(bucket),
     ]);
@@ -236,7 +237,7 @@ export async function GET() {
     }));
     const manifest = {
       format: "test-devices-full-backup",
-      version: 1,
+      version: 2,
       generatedAt,
       counts: {
         employees: employees.length,

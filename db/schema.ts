@@ -18,6 +18,7 @@ export const devices = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
     model: text("model").notNull(),
+    category: text("category").notNull().default("mobile"),
     osVersion: text("os_version"),
     gpu: text("gpu"),
     soc: text("soc"),

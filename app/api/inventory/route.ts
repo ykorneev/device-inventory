@@ -41,6 +41,7 @@ const actionSchema = z.discriminatedUnion("action", [
 const addDeviceSchema = z.object({
   name: z.string().trim().min(2).max(100),
   model: z.string().trim().min(1).max(100),
+  category: z.enum(["mobile", "laptop"]),
   osVersion: z.string().trim().max(100).optional(),
   gpu: z.string().trim().max(120).optional(),
   soc: z.string().trim().max(120).optional(),
@@ -66,6 +67,7 @@ async function readInventory() {
         id,
         name,
         model,
+        category,
         os_version AS osVersion,
         gpu,
         soc,
@@ -147,6 +149,7 @@ function parseDeviceForm(formData: FormData) {
   const parsed = addDeviceSchema.safeParse({
     name: formData.get("name"),
     model: formData.get("model"),
+    category: formData.get("category"),
     osVersion: formData.get("osVersion") || undefined,
     gpu: formData.get("gpu") || undefined,
     soc: formData.get("soc") || undefined,
@@ -191,12 +194,13 @@ async function addDevice(formData: FormData) {
     await getD1()
       .prepare(`
         INSERT INTO devices (
-          name, model, os_version, gpu, soc, tier, quantity, asset_code, comment, photo_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          name, model, category, os_version, gpu, soc, tier, quantity, asset_code, comment, photo_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         input.name,
         input.model,
+        input.category,
         input.osVersion || null,
         input.gpu || null,
         input.soc || null,
@@ -240,6 +244,7 @@ async function updateDevice(formData: FormData) {
         SET
           name = ?,
           model = ?,
+          category = ?,
           os_version = ?,
           gpu = ?,
           soc = ?,
@@ -259,6 +264,7 @@ async function updateDevice(formData: FormData) {
       .bind(
         input.name,
         input.model,
+        input.category,
         input.osVersion || null,
         input.gpu || null,
         input.soc || null,
