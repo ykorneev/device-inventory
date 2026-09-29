@@ -1121,13 +1121,158 @@ export default function Home() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={Boolean(checkoutDevice)} onOpenChange={(open) => !open && setCheckoutDevice(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Who is checking out this device?</DialogTitle><DialogDescription>{checkoutDevice?.name} {checkoutDevice?.model}. Available: {checkoutDevice ? checkoutDevice.quantity - checkoutDevice.loans.length : 0}.</DialogDescription></DialogHeader><Select value={employeeId} onValueChange={setEmployeeId}><SelectTrigger className="h-11 w-full bg-white"><SelectValue placeholder="Select an employee" /></SelectTrigger><SelectContent>{data.employees.map((employee) => <SelectItem key={employee.id} value={String(employee.id)}>{employee.name}</SelectItem>)}</SelectContent></Select><DialogFooter><Button variant="outline" onClick={() => setCheckoutDevice(null)}>Cancel</Button><Button disabled={saving || !employeeId} onClick={() => void confirmCheckout()} className="bg-[#1768e4] hover:bg-[#1058c8]">{saving ? <Loader2 className="animate-spin" /> : <PackageCheck />}Confirm checkout</Button></DialogFooter></DialogContent>
-      </Dialog>
+<Dialog
+  open={Boolean(checkoutDevice)}
+  onOpenChange={(open) => {
+    if (!open) {
+      setCheckoutDevice(null);
+      setEmployeeId("");
+    }
+  }}
+>
+  <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md overflow-hidden p-4 sm:p-6">
+    <DialogHeader className="min-w-0 text-left">
+      <DialogTitle className="pr-6">
+        Who is checking out this device?
+      </DialogTitle>
 
-      <Dialog open={Boolean(returnDevice)} onOpenChange={(open) => { if (!open) { setReturnDevice(null); setLoanId(""); } }}>
-        <DialogContent><DialogHeader><DialogTitle>Who is returning this device?</DialogTitle><DialogDescription>{returnDevice?.name} {returnDevice?.model}. Select an active checkout.</DialogDescription></DialogHeader><Select value={loanId} onValueChange={setLoanId}><SelectTrigger className="h-11 w-full bg-white"><SelectValue placeholder="Select an employee" /></SelectTrigger><SelectContent>{returnDevice?.loans.map((loan) => <SelectItem key={loan.id} value={String(loan.id)}>{loan.employeeName} · since {formatDate(loan.checkedOutAt)}</SelectItem>)}</SelectContent></Select><DialogFooter><Button variant="outline" onClick={() => setReturnDevice(null)}>Cancel</Button><Button disabled={saving || !loanId} onClick={() => void confirmReturn()}>{saving ? <Loader2 className="animate-spin" /> : <RotateCcw />}Confirm return</Button></DialogFooter></DialogContent>
-      </Dialog>
+      <DialogDescription className="min-w-0">
+        <span className="block truncate">
+          {checkoutDevice?.name} {checkoutDevice?.model}
+        </span>
+        <span className="block">
+          Available:{" "}
+          {checkoutDevice
+            ? checkoutDevice.quantity - checkoutDevice.loans.length
+            : 0}
+        </span>
+      </DialogDescription>
+    </DialogHeader>
+
+    <Select value={employeeId} onValueChange={setEmployeeId}>
+      <SelectTrigger className="h-11 w-full min-w-0 bg-white [&>span]:min-w-0 [&>span]:truncate">
+        <SelectValue placeholder="Select an employee" />
+      </SelectTrigger>
+
+      <SelectContent
+        position="popper"
+        className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-1.5rem)] overflow-x-hidden"
+      >
+        {data.employees.map((employee) => (
+          <SelectItem
+            key={employee.id}
+            value={String(employee.id)}
+            className="min-w-0 max-w-full overflow-hidden"
+          >
+            <span className="block max-w-full truncate pr-2">
+              {employee.name}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    <DialogFooter className="gap-2">
+      <Button
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={() => {
+          setCheckoutDevice(null);
+          setEmployeeId("");
+        }}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        disabled={saving || !employeeId}
+        onClick={() => void confirmCheckout()}
+        className="w-full bg-[#1768e4] hover:bg-[#1058c8] sm:w-auto"
+      >
+        {saving ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <PackageCheck />
+        )}
+        Confirm checkout
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+<Dialog
+  open={Boolean(returnDevice)}
+  onOpenChange={(open) => {
+    if (!open) {
+      setReturnDevice(null);
+      setLoanId("");
+    }
+  }}
+>
+  <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md overflow-hidden p-4 sm:p-6">
+    <DialogHeader className="min-w-0 text-left">
+      <DialogTitle className="pr-6">
+        Who is returning this device?
+      </DialogTitle>
+
+      <DialogDescription className="min-w-0">
+        <span className="block truncate">
+          {returnDevice?.name} {returnDevice?.model}
+        </span>
+        <span className="block">Select an active checkout.</span>
+      </DialogDescription>
+    </DialogHeader>
+
+    <Select value={loanId} onValueChange={setLoanId}>
+      <SelectTrigger className="h-11 w-full min-w-0 bg-white [&>span]:min-w-0 [&>span]:truncate">
+        <SelectValue placeholder="Select an employee" />
+      </SelectTrigger>
+
+      <SelectContent
+        position="popper"
+        className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-1.5rem)] overflow-x-hidden"
+      >
+        {returnDevice?.loans.map((loan) => (
+          <SelectItem
+            key={loan.id}
+            value={String(loan.id)}
+            className="min-w-0 max-w-full overflow-hidden"
+          >
+            <span className="block max-w-full truncate pr-2">
+              {loan.employeeName} · since {formatDate(loan.checkedOutAt)}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    <DialogFooter className="gap-2">
+      <Button
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={() => {
+          setReturnDevice(null);
+          setLoanId("");
+        }}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        disabled={saving || !loanId}
+        onClick={() => void confirmReturn()}
+        className="w-full sm:w-auto"
+      >
+        {saving ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <RotateCcw />
+        )}
+        Confirm return
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
     </main>
   );
 }
