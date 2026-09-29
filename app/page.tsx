@@ -752,7 +752,7 @@ export default function Home() {
               <CardContent className="p-0">
                 {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredDevices.length ? (
                   <>
-                    <div className="grid gap-3 bg-slate-50 p-3 md:hidden">
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
                       {filteredDevices.map((device) => (
                         <MobileDeviceCard
                           key={device.id}
@@ -858,7 +858,7 @@ export default function Home() {
               <CardContent className="p-0">
                 {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredLaptopDevices.length ? (
                   <>
-                    <div className="grid gap-3 bg-slate-50 p-3 md:hidden">
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
                       {filteredLaptopDevices.map((device) => (
                         <MobileDeviceCard
                           key={device.id}
@@ -921,7 +921,7 @@ export default function Home() {
               <CardHeader className="border-b border-slate-200 bg-white"><CardTitle className="text-xl">Checkout and Return History</CardTitle><p className="text-sm text-slate-500">The latest 100 device transactions.</p></CardHeader>
               <CardContent className="p-0">
                 {data.history.length ? <>
-                  <div className="grid gap-3 bg-slate-50 p-3 md:hidden">
+                  <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
                     {data.history.map((entry) => <MobileHistoryCard key={entry.id} entry={entry} />)}
                   </div>
                   <div className="hidden md:block"><Table><TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5">Device</TableHead><TableHead>Employee</TableHead><TableHead>Checked out</TableHead><TableHead>Returned</TableHead><TableHead className="px-5">Status</TableHead></TableRow></TableHeader><TableBody>{data.history.map((entry) => <TableRow key={entry.id} className="bg-white"><TableCell className="px-5 py-4"><div className="font-semibold">{entry.deviceName}</div><div className="text-sm text-slate-500">{entry.deviceModel}{entry.assetCode ? ` · ${entry.assetCode}` : ""}</div></TableCell><TableCell className="font-medium">{entry.employeeName}</TableCell><TableCell className="text-slate-500">{formatDate(entry.checkedOutAt)}</TableCell><TableCell className="text-slate-500">{formatDate(entry.returnedAt)}</TableCell><TableCell className="px-5"><Badge variant="outline" className={entry.returnedAt ? "border-slate-200 bg-slate-50 text-slate-600" : "border-orange-200 bg-orange-50 text-orange-700"}>{entry.returnedAt ? "Returned" : "Checked out"}</Badge></TableCell></TableRow>)}</TableBody></Table></div>
@@ -1386,15 +1386,72 @@ function ListRow({ label, value }: { label: string; value: string }) {
 
 function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><p className="font-semibold text-slate-950">{entry.deviceName}</p><p className="break-words text-sm text-slate-500">{entry.deviceModel}{entry.assetCode ? ` · ${entry.assetCode}` : ""}</p></div>
-        <Badge variant="outline" className={`shrink-0 ${entry.returnedAt ? "border-slate-200 bg-slate-50 text-slate-600" : "border-orange-200 bg-orange-50 text-orange-700"}`}>{entry.returnedAt ? "Returned" : "Checked out"}</Badge>
+    <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-slate-950">
+            {entry.deviceName}
+          </p>
+
+          <p className="truncate text-sm text-slate-500">
+            {entry.deviceModel}
+            {entry.assetCode ? ` · ${entry.assetCode}` : ""}
+          </p>
+        </div>
+
+        <Badge
+          variant="outline"
+          className={`shrink-0 ${
+            entry.returnedAt
+              ? "border-slate-200 bg-slate-50 text-slate-600"
+              : "border-orange-200 bg-orange-50 text-orange-700"
+          }`}
+        >
+          {entry.returnedAt ? "Returned" : "Checked out"}
+        </Badge>
       </div>
-      <div className="mt-4 grid gap-3 border-t border-slate-100 pt-3 text-sm">
-        <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Employee</span><span className="text-right font-medium text-slate-800">{entry.employeeName}</span></div>
-        <div className="flex items-start justify-between gap-3"><span className="text-slate-500">Checked out</span><span className="text-right text-slate-700">{formatDate(entry.checkedOutAt)}</span></div>
-        {entry.returnedAt && <div className="flex items-start justify-between gap-3"><span className="text-slate-500">Returned</span><span className="text-right text-slate-700">{formatDate(entry.returnedAt)}</span></div>}
+
+      <div className="mt-4 grid min-w-0 gap-3 border-t border-slate-100 pt-3 text-sm">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <span className="shrink-0 text-slate-500">
+            Employee
+          </span>
+
+          <span
+            className="min-w-0 flex-1 truncate text-right font-medium text-slate-800"
+            title={entry.employeeName}
+          >
+            {entry.employeeName}
+          </span>
+        </div>
+
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <span className="shrink-0 text-slate-500">
+            Checked out
+          </span>
+
+          <span
+            className="min-w-0 flex-1 truncate text-right text-slate-700"
+            title={formatDate(entry.checkedOutAt)}
+          >
+            {formatDate(entry.checkedOutAt)}
+          </span>
+        </div>
+
+        {entry.returnedAt && (
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <span className="shrink-0 text-slate-500">
+              Returned
+            </span>
+
+            <span
+              className="min-w-0 flex-1 truncate text-right text-slate-700"
+              title={formatDate(entry.returnedAt)}
+            >
+              {formatDate(entry.returnedAt)}
+            </span>
+          </div>
+        )}
       </div>
     </article>
   );
