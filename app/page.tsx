@@ -737,8 +737,11 @@ export default function Home() {
             <TabsTrigger value="settings" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Settings2 className="size-4" /> <span className="truncate">Add</span></TabsTrigger>
           </TabsList>
 
-          <TabsContent value="devices">
-            <Card className="overflow-hidden border-slate-200 shadow-sm">
+          <TabsContent
+            value="devices"
+              className="min-w-0 max-w-full overflow-hidden"
+>
+            <Card className="min-w-0 max-w-full overflow-hidden border-slate-200 shadow-sm">
               <CardHeader className="gap-4 border-b border-slate-200 bg-white sm:flex-row sm:items-center sm:justify-between">
                 <div><CardTitle className="text-xl">Device Inventory</CardTitle><p className="mt-1 text-sm text-slate-500">Availability, active checkouts, and device information.</p></div>
                 <div className="flex flex-col gap-2 sm:flex-row">
