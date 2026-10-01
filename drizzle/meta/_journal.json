@@ -29,6 +29,13 @@
       "when": 1790600094467,
       "tag": "0003_tense_thing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790862299514,
+      "tag": "0004_special_shard",
+      "breakpoints": true
     }
   ]
 }

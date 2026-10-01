@@ -106,7 +106,8 @@ CREATE TABLE IF NOT EXISTS loans (
   device_id INTEGER NOT NULL REFERENCES devices(id),
   employee_id INTEGER NOT NULL REFERENCES employees(id),
   checked_out_at TEXT NOT NULL,
-  returned_at TEXT
+  returned_at TEXT,
+  checkout_comment TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_loans_employee_id ON loans (employee_id);
 CREATE INDEX IF NOT EXISTS idx_loans_device_id ON loans (device_id);
@@ -115,7 +116,7 @@ ${insertStatements("employees", ["id", "name", "active", "created_at"], employee
 
 ${insertStatements("devices", ["id", "name", "model", "category", "os_version", "gpu", "soc", "tier", "quantity", "asset_code", "comment", "photo_key", "active", "created_at"], devices)}
 
-${insertStatements("loans", ["id", "device_id", "employee_id", "checked_out_at", "returned_at"], loans)}
+${insertStatements("loans", ["id", "device_id", "employee_id", "checked_out_at", "returned_at", "checkout_comment"], loans)}
 
 COMMIT;
 PRAGMA foreign_keys=ON;
@@ -126,7 +127,7 @@ function createReadme(generatedAt: string) {
   return `TEST DEVICES — FULL BACKUP
 
 Created: ${generatedAt}
-Format version: 2
+Format version: 3
 
 CONTENTS
 - manifest.json: backup version, counts, and photo metadata.
@@ -135,7 +136,7 @@ CONTENTS
 - photos/: all image objects currently stored by the application.
 
 IMPORTANT
-- The backup includes active and removed employees/devices, the complete checkout and return history, and photos.
+- The backup includes active and removed employees/devices, the complete checkout and return history including checkout comments, and photos.
 - Keep this archive private because it can contain employee names and operational history.
 - ZIP integrity checksums are included for every file.
 
@@ -221,7 +222,7 @@ export async function GET() {
     const [employeesResult, devicesResult, loansResult, photoObjects] = await Promise.all([
       db.prepare("SELECT id, name, active, created_at FROM employees ORDER BY id").all(),
       db.prepare("SELECT id, name, model, category, os_version, gpu, soc, tier, quantity, asset_code, comment, photo_key, active, created_at FROM devices ORDER BY id").all(),
-      db.prepare("SELECT id, device_id, employee_id, checked_out_at, returned_at FROM loans ORDER BY id").all(),
+      db.prepare("SELECT id, device_id, employee_id, checked_out_at, returned_at, checkout_comment FROM loans ORDER BY id").all(),
       listPhotoObjects(bucket),
     ]);
 
@@ -237,7 +238,7 @@ export async function GET() {
     }));
     const manifest = {
       format: "test-devices-full-backup",
-      version: 2,
+      version: 3,
       generatedAt,
       counts: {
         employees: employees.length,

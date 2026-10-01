@@ -45,6 +45,7 @@ export const loans = sqliteTable(
       .references(() => employees.id),
     checkedOutAt: text("checked_out_at").notNull(),
     returnedAt: text("returned_at"),
+    checkoutComment: text("checkout_comment"),
   },
   (table) => [
     index("idx_loans_employee_id").on(table.employeeId),

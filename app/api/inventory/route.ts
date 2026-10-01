@@ -13,6 +13,7 @@ const checkoutSchema = z.object({
   action: z.literal("checkout"),
   deviceId: z.number().int().positive(),
   employeeId: z.number().int().positive(),
+  checkoutComment: z.string().trim().max(500).optional(),
 });
 
 const returnSchema = z.object({
@@ -57,6 +58,7 @@ type ActiveLoan = {
   employeeId: number;
   employeeName: string;
   checkedOutAt: string;
+  checkoutComment: string | null;
 };
 
 async function readInventory() {
@@ -86,7 +88,8 @@ async function readInventory() {
         l.device_id AS deviceId,
         e.id AS employeeId,
         e.name AS employeeName,
-        l.checked_out_at AS checkedOutAt
+        l.checked_out_at AS checkedOutAt,
+        l.checkout_comment AS checkoutComment
       FROM loans l
       JOIN employees e ON e.id = l.employee_id
       WHERE l.returned_at IS NULL
@@ -348,8 +351,13 @@ export async function POST(request: NextRequest) {
     if (input.action === "checkout") {
       const result = await db
         .prepare(`
-          INSERT INTO loans (device_id, employee_id, checked_out_at)
-          SELECT d.id, ?, ?
+          INSERT INTO loans (
+            device_id,
+            employee_id,
+            checked_out_at,
+            checkout_comment
+          )
+          SELECT d.id, ?, ?, ?
           FROM devices d
           WHERE d.id = ?
             AND d.active = 1
@@ -359,7 +367,12 @@ export async function POST(request: NextRequest) {
               WHERE l.device_id = d.id AND l.returned_at IS NULL
             ) < d.quantity
         `)
-        .bind(input.employeeId, now, input.deviceId)
+        .bind(
+          input.employeeId,
+          now,
+          input.checkoutComment || null,
+          input.deviceId,
+        )
         .run();
       if (!result.meta.changes) {
         return NextResponse.json(

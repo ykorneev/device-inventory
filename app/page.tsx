@@ -70,6 +70,7 @@ type Loan = {
   employeeId: number;
   employeeName: string;
   checkedOutAt: string;
+  checkoutComment: string | null;
 };
 
 type Device = {
@@ -100,7 +101,7 @@ type HistoryEntry = {
 };
 type InventoryState = { devices: Device[]; employees: Employee[]; history: HistoryEntry[] };
 type InventoryAction =
-  | { action: "checkout"; deviceId: number; employeeId: number }
+  | { action: "checkout"; deviceId: number; employeeId: number; checkoutComment?: string }
   | { action: "return"; loanId: number }
   | { action: "addEmployee"; name: string }
   | { action: "deleteDevice"; deviceId: number }
@@ -317,6 +318,7 @@ export default function Home() {
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [editPhotoInputKey, setEditPhotoInputKey] = useState(0);
   const [employeeId, setEmployeeId] = useState("");
+  const [checkoutComment, setCheckoutComment] = useState("");
   const [loanId, setLoanId] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [deviceName, setDeviceName] = useState("");
@@ -417,17 +419,35 @@ export default function Home() {
       description: "Assigns one available unit to the selected employee.",
       inputSchema: {
         type: "object",
-        properties: { deviceId: { type: "number" }, employeeId: { type: "number" } },
+        properties: {
+          deviceId: { type: "number" },
+          employeeId: { type: "number" },
+          checkoutComment: { type: "string", maxLength: 500 },
+        },
         required: ["deviceId", "employeeId"],
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input) => {
-        const value = input as { deviceId?: unknown; employeeId?: unknown };
+        const value = input as {
+          deviceId?: unknown;
+          employeeId?: unknown;
+          checkoutComment?: unknown;
+        };
         if (typeof value.deviceId !== "number" || typeof value.employeeId !== "number") {
           throw new Error("deviceId and employeeId must be numbers");
         }
-        return sendAction({ action: "checkout", deviceId: value.deviceId, employeeId: value.employeeId });
+        if (value.checkoutComment !== undefined && typeof value.checkoutComment !== "string") {
+          throw new Error("checkoutComment must be a string");
+        }
+        return sendAction({
+          action: "checkout",
+          deviceId: value.deviceId,
+          employeeId: value.employeeId,
+          checkoutComment: typeof value.checkoutComment === "string"
+            ? value.checkoutComment.trim() || undefined
+            : undefined,
+        });
       },
     });
     register({
@@ -456,7 +476,15 @@ export default function Home() {
       const available = device.quantity - device.loans.length;
       const matchesSearch =
         !query ||
-        [device.name, device.model, device.osVersion, device.gpu, device.soc, device.assetCode, ...device.loans.map((loan) => loan.employeeName)]
+        [
+          device.name,
+          device.model,
+          device.osVersion,
+          device.gpu,
+          device.soc,
+          device.assetCode,
+          ...device.loans.flatMap((loan) => [loan.employeeName, loan.checkoutComment]),
+        ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(query));
       const matchesStatus =
@@ -508,14 +536,24 @@ export default function Home() {
   }
 
   async function confirmCheckout() {
-    if (!checkoutDevice || !employeeId) return toast.error("Select an employee");
+    if (!checkoutDevice || !employeeId) {
+      return toast.error("Select an employee");
+    }
+
     const ok = await runAction(
-      { action: "checkout", deviceId: checkoutDevice.id, employeeId: Number(employeeId) },
+      {
+        action: "checkout",
+        deviceId: checkoutDevice.id,
+        employeeId: Number(employeeId),
+        checkoutComment: checkoutComment.trim() || undefined,
+      },
       "Device checked out",
     );
+
     if (ok) {
       setCheckoutDevice(null);
       setEmployeeId("");
+      setCheckoutComment("");
     }
   }
 
@@ -776,16 +814,30 @@ export default function Home() {
                         return (
                           <TableRow key={device.id} className="bg-white">
                             <TableCell className="px-5 py-4">
-                              <button type="button" onClick={() => setDetailDeviceId(device.id)} className="group flex min-w-72 items-center gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
-                                <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
-                                  {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : <Laptop className="size-6" />}
-                                </span>
-                                <span>
-                                  <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
-                                  <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}</span>
-                                  {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
-                                </span>
-                              </button>
+                              <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setDetailDeviceId(device.id)}
+                                  className="group flex min-w-72 flex-1 items-center gap-3 text-left"
+                                  aria-label={`Open ${device.name} ${device.model} details`}
+                                >
+                                  <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                    {device.photoUrl ? (
+                                      <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
+                                    ) : (
+                                      <Laptop className="size-6" />
+                                    )}
+                                  </span>
+                                  <span className="min-w-0">
+                                    <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
+                                    <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                      {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
+                                    </span>
+                                    {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                  </span>
+                                </button>
+                                <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
+                              </div>
                             </TableCell>
                             <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
                             <TableCell className="text-center">
@@ -882,16 +934,30 @@ export default function Home() {
                             return (
                               <TableRow key={device.id} className="bg-white">
                                 <TableCell className="px-5 py-4">
-                                  <button type="button" onClick={() => setDetailDeviceId(device.id)} className="group flex min-w-72 items-center gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
-                                    <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
-                                      {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : <Laptop className="size-6" />}
-                                    </span>
-                                    <span>
-                                      <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
-                                      <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}</span>
-                                      {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
-                                    </span>
-                                  </button>
+                                  <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDetailDeviceId(device.id)}
+                                      className="group flex min-w-72 flex-1 items-center gap-3 text-left"
+                                      aria-label={`Open ${device.name} ${device.model} details`}
+                                    >
+                                      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                        {device.photoUrl ? (
+                                          <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                          <Laptop className="size-6" />
+                                        )}
+                                      </span>
+                                      <span className="min-w-0">
+                                        <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
+                                        <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                          {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
+                                        </span>
+                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                      </span>
+                                    </button>
+                                    <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
                                 <TableCell className="text-center">
@@ -1130,6 +1196,7 @@ export default function Home() {
     if (!open) {
       setCheckoutDevice(null);
       setEmployeeId("");
+      setCheckoutComment("");
     }
   }}
 >
@@ -1175,6 +1242,27 @@ export default function Home() {
       </SelectContent>
     </Select>
 
+    <div className="grid min-w-0 gap-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-sm font-medium text-slate-700">
+          Comment <span className="font-normal text-slate-400">(optional)</span>
+        </label>
+
+        <span className="text-xs text-slate-400">
+          {checkoutComment.length}/500
+        </span>
+      </div>
+
+      <Textarea
+        value={checkoutComment}
+        onChange={(event) => setCheckoutComment(event.target.value)}
+        maxLength={500}
+        rows={4}
+        placeholder="Add a comment (max 500 characters)..."
+        className="min-h-24 w-full resize-none bg-white"
+      />
+    </div>
+
     <DialogFooter className="gap-2">
       <Button
         variant="outline"
@@ -1182,6 +1270,7 @@ export default function Home() {
         onClick={() => {
           setCheckoutDevice(null);
           setEmployeeId("");
+          setCheckoutComment("");
         }}
       >
         Cancel
@@ -1285,6 +1374,39 @@ function MetricCard({ icon: Icon, label, value, tone }: { icon: typeof Boxes; la
   return <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex min-h-28 flex-col justify-between gap-3 p-4 sm:min-h-0 sm:flex-row sm:items-center sm:p-5"><div><p className="text-xs font-medium leading-tight text-slate-500 sm:text-sm">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{value}</p></div><div className={`grid size-9 place-items-center self-end rounded-xl sm:size-11 sm:self-auto sm:rounded-2xl ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div></CardContent></Card>;
 }
 
+function CheckoutCommentList({ loans, className = "" }: { loans: Loan[]; className?: string }) {
+  const commentedLoans = loans.filter((loan) => loan.checkoutComment?.trim());
+  if (!commentedLoans.length) return null;
+
+  return (
+    <div className={`min-w-0 space-y-2 ${className}`}>
+      {commentedLoans.map((loan) => (
+        <div
+          key={loan.id}
+          className="min-w-0 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-left"
+        >
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+              Checkout comment
+            </span>
+            {commentedLoans.length > 1 && (
+              <span className="min-w-0 truncate text-[11px] text-orange-600">
+                {loan.employeeName}
+              </span>
+            )}
+          </div>
+          <p
+            className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700"
+            title={loan.checkoutComment || undefined}
+          >
+            {loan.checkoutComment}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MobileDeviceCard({
   device,
   employeesAvailable,
@@ -1300,14 +1422,14 @@ function MobileDeviceCard({
 }) {
   const free = device.quantity - device.loans.length;
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <button type="button" onClick={onOpen} className="flex w-full items-start gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
+    <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <button type="button" onClick={onOpen} className="flex min-w-0 w-full items-start gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
         <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
           {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : <Laptop className="size-7" />}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-semibold text-slate-950">{device.name}</span>
-          <span className="mt-0.5 block break-words text-sm text-slate-500">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}</span>
+          <span className="mt-0.5 block min-w-0 truncate text-sm text-slate-500">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}</span>
           <span className="mt-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge>
             <span className={`text-xs font-semibold ${free > 0 ? "text-emerald-700" : "text-orange-700"}`}>{free} of {device.quantity} in office</span>
@@ -1317,13 +1439,31 @@ function MobileDeviceCard({
 
       {device.comment && <p className="mt-3 line-clamp-2 text-sm text-slate-500">{device.comment}</p>}
       {device.loans.length > 0 && (
-        <div className="mt-3 rounded-xl bg-orange-50 px-3 py-2.5 text-sm text-orange-900">
-          <span className="font-semibold">Checked out to:</span> {device.loans.map((loan) => loan.employeeName).join(", ")}
+        <div className="mt-3 min-w-0 overflow-hidden rounded-xl bg-orange-50 px-3 py-2.5 text-sm text-orange-900">
+          <div className="min-w-0 truncate">
+            <span className="font-semibold">Checked out to:</span>{" "}
+            {device.loans.map((loan) => loan.employeeName).join(", ")}
+          </div>
         </div>
       )}
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {device.loans.length > 0 && <Button variant="outline" className={free > 0 ? "w-full" : "col-span-2 w-full"} onClick={onReturn}><RotateCcw /> Return</Button>}
-        {free > 0 && <Button className={`${device.loans.length ? "" : "col-span-2"} w-full bg-[#1768e4] hover:bg-[#1058c8]`} disabled={!employeesAvailable} onClick={onCheckout}><PackageCheck /> Check out</Button>}
+      <CheckoutCommentList loans={device.loans} className="mt-2" />
+      <div className="mt-4 grid min-w-0 max-w-full grid-cols-2 gap-2 overflow-hidden">
+        {device.loans.length > 0 && (
+          <Button variant="outline" className={`${free > 0 ? "w-full" : "col-span-2 w-full"} min-w-0`} onClick={onReturn}>
+            <RotateCcw />
+            <span className="truncate">Return</span>
+          </Button>
+        )}
+        {free > 0 && (
+          <Button
+            className={`${device.loans.length ? "" : "col-span-2"} min-w-0 w-full bg-[#1768e4] hover:bg-[#1058c8]`}
+            disabled={!employeesAvailable}
+            onClick={onCheckout}
+          >
+            <PackageCheck />
+            <span className="truncate">Check out</span>
+          </Button>
+        )}
       </div>
     </article>
   );
@@ -1368,6 +1508,11 @@ function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: 
                   <div key={loan.id}>
                     <span className="font-medium">{loan.employeeName}</span>
                     <span className="block text-xs text-slate-500">since {formatDate(loan.checkedOutAt)}</span>
+                    {loan.checkoutComment?.trim() && (
+                      <p className="mt-1 max-w-xl whitespace-pre-wrap break-words text-sm text-slate-700">
+                        {loan.checkoutComment}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

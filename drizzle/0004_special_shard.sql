@@ -1,0 +1,1 @@
+ALTER TABLE `loans` ADD `checkout_comment` text;
