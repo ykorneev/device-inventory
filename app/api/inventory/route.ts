@@ -42,7 +42,7 @@ const actionSchema = z.discriminatedUnion("action", [
 const addDeviceSchema = z.object({
   name: z.string().trim().min(2).max(100),
   model: z.string().trim().min(1).max(100),
-  category: z.enum(["mobile", "laptop"]),
+  category: z.enum(["mobile", "laptop", "console"]),
   osVersion: z.string().trim().max(100).optional(),
   gpu: z.string().trim().max(120).optional(),
   soc: z.string().trim().max(120).optional(),

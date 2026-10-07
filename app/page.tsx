@@ -6,6 +6,7 @@ import {
   Boxes,
   CheckCircle2,
   Download,
+  Gamepad2,
   History,
   ImageIcon,
   Laptop,
@@ -77,7 +78,7 @@ type Device = {
   id: number;
   name: string;
   model: string;
-  category: "mobile" | "laptop";
+  category: "mobile" | "laptop" | "console";
   osVersion: string | null;
   gpu: string | null;
   soc: string | null;
@@ -156,6 +157,12 @@ function tierLabel(tier: Device["tier"]) {
   if (tier === "Хай") return "High";
   if (tier === "Медиум") return "Medium";
   return "Low";
+}
+
+function deviceCategoryLabel(category: Device["category"]) {
+  if (category === "console") return "Console";
+  if (category === "laptop") return "Laptop";
+  return "Mobile";
 }
 
 function escapeExcelXml(value: string) {
@@ -507,6 +514,14 @@ export default function Home() {
     () => data.devices.some((device) => device.category === "laptop"),
     [data.devices],
   );
+  const filteredConsoleDevices = useMemo(
+    () => filteredDevices.filter((device) => device.category === "console"),
+    [filteredDevices],
+  );
+  const hasConsoleDevices = useMemo(
+    () => data.devices.some((device) => device.category === "console"),
+    [data.devices],
+  );
 
   const totalUnits = data.devices.reduce((sum, device) => sum + device.quantity, 0);
   const checkedOut = data.devices.reduce((sum, device) => sum + device.loans.length, 0);
@@ -767,10 +782,11 @@ export default function Home() {
         {error && <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-800"><span>{error}</span><Button variant="outline" size="sm" onClick={() => void fetchState()}>Retry</Button></div>}
 
         <Tabs value={tab} onValueChange={setTab} className="mx-auto w-full gap-5">
-          <TabsList className="device-tabs-list mx-auto grid w-full max-w-4xl grid-cols-2 gap-1.5 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm sm:grid-cols-5">
+          <TabsList className="device-tabs-list mx-auto grid w-full max-w-5xl grid-cols-2 gap-1.5 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
             <TabsTrigger value="devices" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Checkout</span></TabsTrigger>
             <TabsTrigger value="device-list" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><List className="size-4" /> <span className="truncate">Mobile devices</span></TabsTrigger>
             <TabsTrigger value="laptops" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Laptops</span></TabsTrigger>
+            <TabsTrigger value="consoles" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Gamepad2 className="size-4" /> <span className="truncate">Consoles</span></TabsTrigger>
             <TabsTrigger value="history" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><History className="size-4" /> <span className="truncate">History</span></TabsTrigger>
             <TabsTrigger value="settings" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Settings2 className="size-4" /> <span className="truncate">Add</span></TabsTrigger>
           </TabsList>
@@ -824,6 +840,8 @@ export default function Home() {
                                   <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
                                     {device.photoUrl ? (
                                       <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
+                                    ) : device.category === "console" ? (
+                                      <Gamepad2 className="size-6" />
                                     ) : (
                                       <Laptop className="size-6" />
                                     )}
@@ -985,6 +1003,93 @@ export default function Home() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="consoles">
+            <Card className="overflow-hidden border-slate-200 shadow-sm">
+              <CardHeader className="gap-4 border-b border-slate-200 bg-white sm:flex-row sm:items-center sm:justify-between">
+                <div><CardTitle className="text-xl">Consoles</CardTitle><p className="mt-1 text-sm text-slate-500">Console availability, active checkouts, and device information.</p></div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-10 w-full bg-white sm:w-44"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="available">Available in office</SelectItem><SelectItem value="out">Checked out</SelectItem></SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredConsoleDevices.length ? (
+                  <>
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
+                      {filteredConsoleDevices.map((device) => (
+                        <MobileDeviceCard
+                          key={device.id}
+                          device={device}
+                          employeesAvailable={Boolean(data.employees.length)}
+                          onOpen={() => setDetailDeviceId(device.id)}
+                          onCheckout={() => setCheckoutDevice(device)}
+                          onReturn={() => openReturn(device)}
+                        />
+                      ))}
+                    </div>
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                          {filteredConsoleDevices.map((device) => {
+                            const free = device.quantity - device.loans.length;
+                            return (
+                              <TableRow key={device.id} className="bg-white">
+                                <TableCell className="px-5 py-4">
+                                  <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDetailDeviceId(device.id)}
+                                      className="group flex min-w-72 flex-1 items-center gap-3 text-left"
+                                      aria-label={`Open ${device.name} ${device.model} details`}
+                                    >
+                                      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                        {device.photoUrl ? (
+                                          <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                          <Gamepad2 className="size-6" />
+                                        )}
+                                      </span>
+                                      <span className="min-w-0">
+                                        <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
+                                        <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                          {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
+                                        </span>
+                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                      </span>
+                                    </button>
+                                    <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
+                                <TableCell className="text-center">
+                                  <div className="font-semibold text-slate-800">{free} of {device.quantity}</div>
+                                  <div className="mx-auto mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-slate-700">{loan.employeeName}</div><div className="text-xs text-slate-400">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"><CheckCircle2 /> All in office</Badge>}
+                                </TableCell>
+                                <TableCell className="px-5 text-center">
+                                  <div className="flex justify-center gap-2">
+                                    {device.loans.length > 0 && <Button variant="outline" size="sm" onClick={() => openReturn(device)}><RotateCcw /> Return</Button>}
+                                    {free > 0 && <Button size="sm" className="bg-[#1768e4] hover:bg-[#1058c8]" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                ) : <EmptyState hasDevices={hasConsoleDevices} onOpenSettings={() => setTab("settings")} />}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="history">
             <Card className="overflow-hidden border-slate-200 shadow-sm">
               <CardHeader className="border-b border-slate-200 bg-white"><CardTitle className="text-xl">Checkout and Return History</CardTitle><p className="text-sm text-slate-500">The latest 100 device transactions.</p></CardHeader>
@@ -1005,7 +1110,7 @@ export default function Home() {
                 <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Plus className="size-5 text-blue-600" /> Add Device</CardTitle><p className="text-sm text-slate-500">For identical devices, enter the total number of units.</p></CardHeader>
                 <CardContent>
                   <form onSubmit={addDevice} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Field label="Device type"><Select value={deviceCategory} onValueChange={(value) => setDeviceCategory(value as Device["category"])}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem></SelectContent></Select></Field>
+                    <Field label="Device type"><Select value={deviceCategory} onValueChange={(value) => setDeviceCategory(value as Device["category"])}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
                     <Field label="Name"><Input required minLength={2} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} placeholder="For example, iPhone" /></Field>
                     <Field label="Model"><Input required value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} placeholder="For example, 15 Pro" /></Field>
                     <Field label="OS version"><Input value={osVersion} onChange={(event) => setOsVersion(event.target.value)} placeholder="For example, iOS 18.2" /></Field>
@@ -1080,7 +1185,7 @@ export default function Home() {
                   <DetailRow label="Model">{detailDevice.model}</DetailRow>
                   <DetailRow label="Tier"><Badge variant="outline" className={tierClass(detailDevice.tier)}>{tierLabel(detailDevice.tier)}</Badge></DetailRow>
                   <DetailRow label="OS version">{detailDevice.osVersion || "Not specified"}</DetailRow>
-                  <DetailRow label="Device type">{detailDevice.category === "laptop" ? "Laptop" : "Mobile"}</DetailRow>
+                  <DetailRow label="Device type">{deviceCategoryLabel(detailDevice.category)}</DetailRow>
                   <DetailRow label="GPU">{detailDevice.gpu || "Not specified"}</DetailRow>
                   <DetailRow label="SoC">{detailDevice.soc || "Not specified"}</DetailRow>
                   <DetailRow label="Status">
@@ -1111,7 +1216,7 @@ export default function Home() {
             <DialogDescription>Update the device information and save the card.</DialogDescription>
           </DialogHeader>
           <form onSubmit={updateDevice} className="grid gap-4 sm:grid-cols-2">
-            <Field label="Device type"><Select value={editValues.category} onValueChange={(category) => setEditValues((value) => ({ ...value, category: category as Device["category"] }))}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem></SelectContent></Select></Field>
+            <Field label="Device type"><Select value={editValues.category} onValueChange={(category) => setEditValues((value) => ({ ...value, category: category as Device["category"] }))}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
             <Field label="Name"><Input required minLength={2} value={editValues.name} onChange={(event) => setEditValues((value) => ({ ...value, name: event.target.value }))} /></Field>
             <Field label="Model"><Input required value={editValues.model} onChange={(event) => setEditValues((value) => ({ ...value, model: event.target.value }))} /></Field>
             <Field label="OS version"><Input value={editValues.osVersion} onChange={(event) => setEditValues((value) => ({ ...value, osVersion: event.target.value }))} /></Field>
@@ -1425,7 +1530,7 @@ function MobileDeviceCard({
     <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <button type="button" onClick={onOpen} className="flex min-w-0 w-full items-start gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
         <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
-          {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : <Laptop className="size-7" />}
+          {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : device.category === "console" ? <Gamepad2 className="size-7" /> : <Laptop className="size-7" />}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-semibold text-slate-950">{device.name}</span>
@@ -1475,7 +1580,7 @@ function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: 
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-start gap-4 border-b border-slate-100 p-4 sm:p-5">
         <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 sm:size-24">
-          {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : <Laptop className="size-8" />}
+          {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : device.category === "console" ? <Gamepad2 className="size-8" /> : <Laptop className="size-8" />}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
@@ -1491,7 +1596,7 @@ function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: 
         </div>
       </div>
       <dl className="divide-y divide-slate-100 text-sm">
-        <ListRow label="Device type" value={device.category === "laptop" ? "Laptop" : "Mobile"} />
+        <ListRow label="Device type" value={deviceCategoryLabel(device.category)} />
         <ListRow label="OS version" value={device.osVersion || "Not specified"} />
         <ListRow label="GPU" value={device.gpu || "Not specified"} />
         <ListRow label="SoC" value={device.soc || "Not specified"} />
