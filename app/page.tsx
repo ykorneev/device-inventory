@@ -12,12 +12,14 @@ import {
   Laptop,
   List,
   Loader2,
+  Moon,
   PackageCheck,
   Pencil,
   Plus,
   RotateCcw,
   Search,
   Settings2,
+  Sun,
   Trash2,
   Upload,
   UserRound,
@@ -148,9 +150,9 @@ function formatDate(value: string | null) {
 }
 
 function tierClass(tier: Device["tier"]) {
-  if (tier === "Хай") return "border-violet-200 bg-violet-50 text-violet-700";
-  if (tier === "Медиум") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-slate-50 text-slate-600";
+  if (tier === "Хай") return "rabbit-tier-high";
+  if (tier === "Медиум") return "rabbit-tier-medium";
+  return "rabbit-tier-low";
 }
 
 function tierLabel(tier: Device["tier"]) {
@@ -302,7 +304,7 @@ function exportDevicesToExcel(devices: Device[]) {
   ];
 
   const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="10"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1768E4"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFE2E8F0"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="1" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Arial"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="10"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF08923B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left/><right/><top/><bottom style="thin"><color rgb="FFD5DFE5"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="1" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
   const worksheetOverrides = sheets
     .map((_, index) => `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`)
@@ -355,6 +357,7 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupConfirmOpen, setBackupConfirmOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState("devices");
   const [search, setSearch] = useState("");
@@ -414,6 +417,29 @@ export default function Home() {
       .catch((cause: Error) => setError(cause.message))
       .finally(() => setLoading(false));
   }, [fetchState]);
+
+  useEffect(() => {
+    let savedTheme: string | null = null;
+    try {
+      savedTheme = window.localStorage.getItem("rabbit-games-test-devices-theme");
+    } catch {
+      savedTheme = null;
+    }
+
+    const initialTheme: "dark" | "light" = savedTheme === "light" ? "light" : "dark";
+    setTheme(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
+  }, []);
+
+  function changeTheme(nextTheme: "dark" | "light") {
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    try {
+      window.localStorage.setItem("rabbit-games-test-devices-theme", nextTheme);
+    } catch {
+      // Theme still changes for this session when storage is unavailable.
+    }
+  }
 
   useEffect(() => {
     if (!photo) {
@@ -801,18 +827,45 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f6fb] text-slate-950">
+    <main className="rabbit-app min-h-screen bg-background text-foreground">
       <Toaster richColors position="top-right" />
-      <header className="border-b border-white/10 bg-[#071a33] text-white">
+      <header className="rabbit-header border-b">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="grid size-11 place-items-center rounded-2xl bg-[#2f7df4] shadow-[0_10px_30px_rgba(47,125,244,.35)]"><Laptop className="size-6" /></div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">Office inventory</p>
-              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Test Devices</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="rabbit-mark grid size-11 shrink-0 place-items-center"><Laptop className="size-6" /></div>
+            <div className="min-w-0">
+              <p className="brand-kicker truncate text-xs">Office inventory</p>
+              <h1 className="brand-heading truncate text-xl sm:text-2xl">Test Devices</h1>
             </div>
           </div>
-          <div className="hidden items-center gap-2 text-sm text-blue-100 sm:flex"><span className="size-2 rounded-full bg-emerald-400" />Internal tool</div>
+
+          <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+            <div className="rabbit-theme-switch" role="group" aria-label="Color theme">
+              <button
+                type="button"
+                aria-label="Use light theme"
+                aria-pressed={theme === "light"}
+                title="Light theme"
+                onClick={() => changeTheme("light")}
+              >
+                <Sun className="size-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Use dark theme"
+                aria-pressed={theme === "dark"}
+                title="Dark theme"
+                onClick={() => changeTheme("dark")}
+              >
+                <Moon className="size-4" />
+              </button>
+            </div>
+
+            <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
+              <span className="rabbit-internal-dot size-2 rounded-full" />
+              Internal tool
+            </div>
+          </div>
         </div>
       </header>
 
@@ -824,37 +877,37 @@ export default function Home() {
           <MetricCard icon={Users} label="Employees" value={data.employees.length} tone="slate" />
         </section>
 
-        {error && <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-800"><span>{error}</span><Button variant="outline" size="sm" onClick={() => void fetchState()}>Retry</Button></div>}
+        {error && <div className="mb-6 flex items-center justify-between gap-4 rounded-none border border-red-200 bg-red-50 px-4 py-3 text-red-800"><span>{error}</span><Button variant="outline" size="sm" onClick={() => void fetchState()}>Retry</Button></div>}
 
         <Tabs value={tab} onValueChange={setTab} className="mx-auto w-full gap-5">
-          <TabsList className="device-tabs-list mx-auto grid w-full max-w-5xl grid-cols-2 gap-1.5 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm sm:grid-cols-3 lg:grid-cols-6">
-            <TabsTrigger value="devices" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Checkout</span></TabsTrigger>
-            <TabsTrigger value="device-list" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><List className="size-4" /> <span className="truncate">Mobile devices</span></TabsTrigger>
-            <TabsTrigger value="laptops" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Laptops</span></TabsTrigger>
-            <TabsTrigger value="consoles" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Gamepad2 className="size-4" /> <span className="truncate">Consoles</span></TabsTrigger>
-            <TabsTrigger value="history" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><History className="size-4" /> <span className="truncate">History</span></TabsTrigger>
-            <TabsTrigger value="settings" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden rounded-xl border border-slate-300 bg-slate-50 px-1.5 text-center text-[13px] font-semibold shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-800 data-[state=active]:shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12)] sm:gap-2 sm:px-3 sm:text-sm"><Settings2 className="size-4" /> <span className="truncate">Add</span></TabsTrigger>
+          <TabsList className="device-tabs-list mx-auto grid w-full max-w-5xl grid-cols-2 gap-px border border-border bg-card p-0 shadow-none sm:grid-cols-3 lg:grid-cols-6">
+            <TabsTrigger value="devices" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Checkout</span></TabsTrigger>
+            <TabsTrigger value="device-list" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><List className="size-4" /> <span className="truncate">Mobile devices</span></TabsTrigger>
+            <TabsTrigger value="laptops" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><Laptop className="size-4" /> <span className="truncate">Laptops</span></TabsTrigger>
+            <TabsTrigger value="consoles" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><Gamepad2 className="size-4" /> <span className="truncate">Consoles</span></TabsTrigger>
+            <TabsTrigger value="history" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><History className="size-4" /> <span className="truncate">History</span></TabsTrigger>
+            <TabsTrigger value="settings" className="device-tabs-trigger min-w-0 max-w-full gap-1.5 overflow-hidden border border-border bg-transparent px-1.5 text-center text-[13px] shadow-none sm:gap-2 sm:px-3 sm:text-sm"><Settings2 className="size-4" /> <span className="truncate">Add</span></TabsTrigger>
           </TabsList>
 
           <TabsContent
             value="devices"
               className="min-w-0 max-w-full overflow-hidden"
 >
-            <Card className="min-w-0 max-w-full overflow-hidden border-slate-200 shadow-sm">
-              <CardHeader className="gap-4 border-b border-slate-200 bg-white sm:flex-row sm:items-center sm:justify-between">
-                <div><CardTitle className="text-xl">Device Inventory</CardTitle><p className="mt-1 text-sm text-slate-500">Availability, active checkouts, and device information.</p></div>
+            <Card className="min-w-0 max-w-full overflow-hidden border-border shadow-none">
+              <CardHeader className="rabbit-panel-header gap-4 border-b border-border bg-card sm:flex-row sm:items-center sm:justify-between">
+                <div><CardTitle className="text-xl">Device Inventory</CardTitle><p className="mt-1 text-sm text-muted-foreground">Availability, active checkouts, and device information.</p></div>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
+                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-full bg-white sm:w-44"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 w-full bg-card sm:w-44"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="available">Available in office</SelectItem><SelectItem value="out">Checked out</SelectItem></SelectContent>
                   </Select>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredDevices.length ? (
+                {loading ? <div className="grid min-h-64 place-items-center text-muted-foreground"><Loader2 className="size-7 animate-spin" /></div> : filteredDevices.length ? (
                   <>
-                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-muted p-3 md:hidden">
                       {filteredDevices.map((device) => (
                         <MobileDeviceCard
                           key={device.id}
@@ -868,12 +921,12 @@ export default function Home() {
                     </div>
                     <div className="hidden md:block">
                   <Table>
-                    <TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
+                    <TableHeader className="rabbit-table-head bg-muted"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {filteredDevices.map((device) => {
                         const free = device.quantity - device.loans.length;
                         return (
-                          <TableRow key={device.id} className="bg-white">
+                          <TableRow key={device.id} className="rabbit-row bg-card">
                             <TableCell className="px-5 py-4">
                               <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
                                 <button
@@ -882,7 +935,7 @@ export default function Home() {
                                   className="group flex min-w-72 flex-1 items-center gap-3 text-left"
                                   aria-label={`Open ${device.name} ${device.model} details`}
                                 >
-                                  <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                  <span className="rabbit-photo-frame grid size-14 shrink-0 place-items-center overflow-hidden border border-border bg-muted text-muted-foreground transition group-hover:border-primary group-hover:ring-2 group-hover:ring-primary/20">
                                     {device.photoUrl ? (
                                       <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
                                     ) : device.category === "console" ? (
@@ -892,11 +945,11 @@ export default function Home() {
                                     )}
                                   </span>
                                   <span className="min-w-0">
-                                    <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
-                                    <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                    <span className="block font-semibold text-foreground transition group-hover:text-[var(--green-site)] group-hover:underline">{device.name}</span>
+                                    <span className="mt-0.5 block text-sm text-muted-foreground transition group-hover:text-[var(--green-site)]">
                                       {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
                                     </span>
-                                    {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                    {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-muted-foreground">{device.comment}</span>}
                                   </span>
                                 </button>
                                 <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
@@ -904,16 +957,16 @@ export default function Home() {
                             </TableCell>
                             <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
                             <TableCell className="text-center">
-                              <div className="font-semibold text-slate-800">{free} of {device.quantity}</div>
-                              <div className="mx-auto mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
+                              <div className="font-semibold text-foreground">{free} of {device.quantity}</div>
+                              <div className="mx-auto mt-1 h-1.5 w-24 rabbit-progress-track overflow-hidden rounded-full bg-secondary"><div className="rabbit-progress-bar h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
                             </TableCell>
                             <TableCell className="text-center">
-                              {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-slate-700">{loan.employeeName}</div><div className="text-xs text-slate-400">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"><CheckCircle2 /> All in office</Badge>}
+                              {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-foreground">{loan.employeeName}</div><div className="text-xs text-muted-foreground">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="rabbit-status-ok"><CheckCircle2 /> All in office</Badge>}
                             </TableCell>
                             <TableCell className="px-5 text-center">
                               <div className="flex justify-center gap-2">
                                 {device.loans.length > 0 && <Button variant="outline" size="sm" onClick={() => openReturn(device)}><RotateCcw /> Return</Button>}
-                                {free > 0 && <Button size="sm" className="bg-[#1768e4] hover:bg-[#1058c8]" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
+                                {free > 0 && <Button size="sm" className="rabbit-primary-action" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -925,9 +978,9 @@ export default function Home() {
                   </>
                 ) : <EmptyState hasDevices={Boolean(data.devices.length)} onOpenSettings={() => setTab("settings")} />}
                 {!loading && (
-                  <div className="flex flex-col justify-center gap-2 border-t border-slate-200 bg-white p-4 sm:flex-row sm:justify-end sm:px-5">
-                    {data.devices.length > 0 && <Button type="button" variant="outline" className="w-full bg-white sm:w-auto" onClick={() => { exportDevicesToExcel(data.devices); toast.success("Excel file exported"); }}><Download /> Export</Button>}
-                    <Button type="button" className="w-full bg-[#071a33] text-white hover:bg-[#102b4d] sm:w-auto" onClick={() => setBackupConfirmOpen(true)}><Download /> Full backup</Button>
+                  <div className="flex flex-col justify-center gap-2 border-t border-border bg-card p-4 sm:flex-row sm:justify-end sm:px-5">
+                    {data.devices.length > 0 && <Button type="button" variant="outline" className="rabbit-secondary-action w-full sm:w-auto" onClick={() => { exportDevicesToExcel(data.devices); toast.success("Excel file exported"); }}><Download /> Export</Button>}
+                    <Button type="button" className="w-full rabbit-secondary-action sm:w-auto" onClick={() => setBackupConfirmOpen(true)}><Download /> Full backup</Button>
                   </div>
                 )}
               </CardContent>
@@ -935,14 +988,14 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="device-list">
-            <Card className="overflow-hidden border-slate-200 shadow-sm">
-              <CardHeader className="border-b border-slate-200 bg-white">
+            <Card className="overflow-hidden border-border shadow-none">
+              <CardHeader className="rabbit-panel-header border-b border-border bg-card">
                 <CardTitle className="text-xl">Mobile devices</CardTitle>
-                <p className="text-sm text-slate-500">All mobile device cards with complete device information.</p>
+                <p className="text-sm text-muted-foreground">All mobile device cards with complete device information.</p>
               </CardHeader>
-              <CardContent className="bg-slate-50 p-3 sm:p-5">
+              <CardContent className="bg-muted p-3 sm:p-5">
                 {loading ? (
-                  <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div>
+                  <div className="grid min-h-64 place-items-center text-muted-foreground"><Loader2 className="size-7 animate-spin" /></div>
                 ) : mobileDevices.length ? (
                   <div className="grid gap-4 lg:grid-cols-2">
                     {mobileDevices.map((device) => (
@@ -962,21 +1015,21 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="laptops">
-            <Card className="overflow-hidden border-slate-200 shadow-sm">
-              <CardHeader className="gap-4 border-b border-slate-200 bg-white sm:flex-row sm:items-center sm:justify-between">
-                <div><CardTitle className="text-xl">Laptops</CardTitle><p className="mt-1 text-sm text-slate-500">Laptop availability, active checkouts, and device information.</p></div>
+            <Card className="overflow-hidden border-border shadow-none">
+              <CardHeader className="rabbit-panel-header gap-4 border-b border-border bg-card sm:flex-row sm:items-center sm:justify-between">
+                <div><CardTitle className="text-xl">Laptops</CardTitle><p className="mt-1 text-sm text-muted-foreground">Laptop availability, active checkouts, and device information.</p></div>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
+                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-full bg-white sm:w-44"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 w-full bg-card sm:w-44"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="available">Available in office</SelectItem><SelectItem value="out">Checked out</SelectItem></SelectContent>
                   </Select>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredLaptopDevices.length ? (
+                {loading ? <div className="grid min-h-64 place-items-center text-muted-foreground"><Loader2 className="size-7 animate-spin" /></div> : filteredLaptopDevices.length ? (
                   <>
-                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-muted p-3 md:hidden">
                       {filteredLaptopDevices.map((device) => (
                         <MobileDeviceCard
                           key={device.id}
@@ -990,12 +1043,12 @@ export default function Home() {
                     </div>
                     <div className="hidden md:block">
                       <Table>
-                        <TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
+                        <TableHeader className="rabbit-table-head bg-muted"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {filteredLaptopDevices.map((device) => {
                             const free = device.quantity - device.loans.length;
                             return (
-                              <TableRow key={device.id} className="bg-white">
+                              <TableRow key={device.id} className="rabbit-row bg-card">
                                 <TableCell className="px-5 py-4">
                                   <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
                                     <button
@@ -1004,7 +1057,7 @@ export default function Home() {
                                       className="group flex min-w-72 flex-1 items-center gap-3 text-left"
                                       aria-label={`Open ${device.name} ${device.model} details`}
                                     >
-                                      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                      <span className="rabbit-photo-frame grid size-14 shrink-0 place-items-center overflow-hidden border border-border bg-muted text-muted-foreground transition group-hover:border-primary group-hover:ring-2 group-hover:ring-primary/20">
                                         {device.photoUrl ? (
                                           <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
                                         ) : (
@@ -1012,11 +1065,11 @@ export default function Home() {
                                         )}
                                       </span>
                                       <span className="min-w-0">
-                                        <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
-                                        <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                        <span className="block font-semibold text-foreground transition group-hover:text-[var(--green-site)] group-hover:underline">{device.name}</span>
+                                        <span className="mt-0.5 block text-sm text-muted-foreground transition group-hover:text-[var(--green-site)]">
                                           {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
                                         </span>
-                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-muted-foreground">{device.comment}</span>}
                                       </span>
                                     </button>
                                     <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
@@ -1024,16 +1077,16 @@ export default function Home() {
                                 </TableCell>
                                 <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
                                 <TableCell className="text-center">
-                                  <div className="font-semibold text-slate-800">{free} of {device.quantity}</div>
-                                  <div className="mx-auto mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
+                                  <div className="font-semibold text-foreground">{free} of {device.quantity}</div>
+                                  <div className="mx-auto mt-1 h-1.5 w-24 rabbit-progress-track overflow-hidden rounded-full bg-secondary"><div className="rabbit-progress-bar h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-slate-700">{loan.employeeName}</div><div className="text-xs text-slate-400">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"><CheckCircle2 /> All in office</Badge>}
+                                  {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-foreground">{loan.employeeName}</div><div className="text-xs text-muted-foreground">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="rabbit-status-ok"><CheckCircle2 /> All in office</Badge>}
                                 </TableCell>
                                 <TableCell className="px-5 text-center">
                                   <div className="flex justify-center gap-2">
                                     {device.loans.length > 0 && <Button variant="outline" size="sm" onClick={() => openReturn(device)}><RotateCcw /> Return</Button>}
-                                    {free > 0 && <Button size="sm" className="bg-[#1768e4] hover:bg-[#1058c8]" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
+                                    {free > 0 && <Button size="sm" className="rabbit-primary-action" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -1049,21 +1102,21 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="consoles">
-            <Card className="overflow-hidden border-slate-200 shadow-sm">
-              <CardHeader className="gap-4 border-b border-slate-200 bg-white sm:flex-row sm:items-center sm:justify-between">
-                <div><CardTitle className="text-xl">Consoles</CardTitle><p className="mt-1 text-sm text-slate-500">Console availability, active checkouts, and device information.</p></div>
+            <Card className="overflow-hidden border-border shadow-none">
+              <CardHeader className="rabbit-panel-header gap-4 border-b border-border bg-card sm:flex-row sm:items-center sm:justify-between">
+                <div><CardTitle className="text-xl">Consoles</CardTitle><p className="mt-1 text-sm text-muted-foreground">Console availability, active checkouts, and device information.</p></div>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
+                  <div className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Model, OS, asset ID, or employee" className="h-10 w-full pl-9 sm:w-80" /></div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-full bg-white sm:w-44"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 w-full bg-card sm:w-44"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="available">Available in office</SelectItem><SelectItem value="out">Checked out</SelectItem></SelectContent>
                   </Select>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {loading ? <div className="grid min-h-64 place-items-center text-slate-500"><Loader2 className="size-7 animate-spin" /></div> : filteredConsoleDevices.length ? (
+                {loading ? <div className="grid min-h-64 place-items-center text-muted-foreground"><Loader2 className="size-7 animate-spin" /></div> : filteredConsoleDevices.length ? (
                   <>
-                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
+                    <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-muted p-3 md:hidden">
                       {filteredConsoleDevices.map((device) => (
                         <MobileDeviceCard
                           key={device.id}
@@ -1077,12 +1130,12 @@ export default function Home() {
                     </div>
                     <div className="hidden md:block">
                       <Table>
-                        <TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
+                        <TableHeader className="rabbit-table-head bg-muted"><TableRow><TableHead className="px-5 text-center">Device</TableHead><TableHead className="text-center">Tier</TableHead><TableHead className="text-center">Stock</TableHead><TableHead className="text-center">Assigned to</TableHead><TableHead className="px-5 text-center">Action</TableHead></TableRow></TableHeader>
                         <TableBody>
                           {filteredConsoleDevices.map((device) => {
                             const free = device.quantity - device.loans.length;
                             return (
-                              <TableRow key={device.id} className="bg-white">
+                              <TableRow key={device.id} className="rabbit-row bg-card">
                                 <TableCell className="px-5 py-4">
                                   <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
                                     <button
@@ -1091,7 +1144,7 @@ export default function Home() {
                                       className="group flex min-w-72 flex-1 items-center gap-3 text-left"
                                       aria-label={`Open ${device.name} ${device.model} details`}
                                     >
-                                      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-blue-400 group-hover:ring-2 group-hover:ring-blue-100">
+                                      <span className="rabbit-photo-frame grid size-14 shrink-0 place-items-center overflow-hidden border border-border bg-muted text-muted-foreground transition group-hover:border-primary group-hover:ring-2 group-hover:ring-primary/20">
                                         {device.photoUrl ? (
                                           <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" />
                                         ) : (
@@ -1099,11 +1152,11 @@ export default function Home() {
                                         )}
                                       </span>
                                       <span className="min-w-0">
-                                        <span className="block font-semibold text-slate-900 transition group-hover:text-blue-700 group-hover:underline">{device.name}</span>
-                                        <span className="mt-0.5 block text-sm text-slate-500 transition group-hover:text-blue-600">
+                                        <span className="block font-semibold text-foreground transition group-hover:text-[var(--green-site)] group-hover:underline">{device.name}</span>
+                                        <span className="mt-0.5 block text-sm text-muted-foreground transition group-hover:text-[var(--green-site)]">
                                           {device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}{device.assetCode ? ` · ${device.assetCode}` : ""}
                                         </span>
-                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-slate-400">{device.comment}</span>}
+                                        {device.comment && <span className="mt-1 block max-w-md whitespace-normal text-xs text-muted-foreground">{device.comment}</span>}
                                       </span>
                                     </button>
                                     <CheckoutCommentList loans={device.loans} className="w-full xl:max-w-72" />
@@ -1111,16 +1164,16 @@ export default function Home() {
                                 </TableCell>
                                 <TableCell className="text-center"><Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge></TableCell>
                                 <TableCell className="text-center">
-                                  <div className="font-semibold text-slate-800">{free} of {device.quantity}</div>
-                                  <div className="mx-auto mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
+                                  <div className="font-semibold text-foreground">{free} of {device.quantity}</div>
+                                  <div className="mx-auto mt-1 h-1.5 w-24 rabbit-progress-track overflow-hidden rounded-full bg-secondary"><div className="rabbit-progress-bar h-full rounded-full bg-emerald-500" style={{ width: `${device.quantity ? (free / device.quantity) * 100 : 0}%` }} /></div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                  {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-slate-700">{loan.employeeName}</div><div className="text-xs text-slate-400">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"><CheckCircle2 /> All in office</Badge>}
+                                  {device.loans.length ? <div className="space-y-1.5">{device.loans.map((loan) => <div key={loan.id}><div className="font-medium text-foreground">{loan.employeeName}</div><div className="text-xs text-muted-foreground">since {formatDate(loan.checkedOutAt)}</div></div>)}</div> : <Badge className="rabbit-status-ok"><CheckCircle2 /> All in office</Badge>}
                                 </TableCell>
                                 <TableCell className="px-5 text-center">
                                   <div className="flex justify-center gap-2">
                                     {device.loans.length > 0 && <Button variant="outline" size="sm" onClick={() => openReturn(device)}><RotateCcw /> Return</Button>}
-                                    {free > 0 && <Button size="sm" className="bg-[#1768e4] hover:bg-[#1058c8]" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
+                                    {free > 0 && <Button size="sm" className="rabbit-primary-action" disabled={!data.employees.length} onClick={() => setCheckoutDevice(device)}><PackageCheck /> Check out</Button>}
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -1136,51 +1189,51 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="history">
-            <Card className="overflow-hidden border-slate-200 shadow-sm">
-              <CardHeader className="border-b border-slate-200 bg-white"><CardTitle className="text-xl">Checkout and Return History</CardTitle><p className="text-sm text-slate-500">The latest 100 device transactions.</p></CardHeader>
+            <Card className="overflow-hidden border-border shadow-none">
+              <CardHeader className="rabbit-panel-header border-b border-border bg-card"><CardTitle className="text-xl">Checkout and Return History</CardTitle><p className="text-sm text-muted-foreground">The latest 100 device transactions.</p></CardHeader>
               <CardContent className="p-0">
                 {data.history.length ? <>
-                  <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-slate-50 p-3 md:hidden">
+                  <div className="grid min-w-0 max-w-full gap-3 overflow-hidden bg-muted p-3 md:hidden">
                     {data.history.map((entry) => <MobileHistoryCard key={entry.id} entry={entry} />)}
                   </div>
-                  <div className="hidden md:block"><Table><TableHeader className="bg-slate-50"><TableRow><TableHead className="px-5">Device</TableHead><TableHead>Employee</TableHead><TableHead>Checked out</TableHead><TableHead>Returned</TableHead><TableHead className="px-5">Status</TableHead></TableRow></TableHeader><TableBody>{data.history.map((entry) => <TableRow key={entry.id} className="bg-white"><TableCell className="px-5 py-4"><div className="font-semibold">{entry.deviceName}</div><div className="text-sm text-slate-500">{entry.deviceModel}{entry.assetCode ? ` · ${entry.assetCode}` : ""}</div></TableCell><TableCell className="font-medium">{entry.employeeName}</TableCell><TableCell className="text-slate-500">{formatDate(entry.checkedOutAt)}</TableCell><TableCell className="text-slate-500">{formatDate(entry.returnedAt)}</TableCell><TableCell className="px-5"><Badge variant="outline" className={entry.returnedAt ? "border-slate-200 bg-slate-50 text-slate-600" : "border-orange-200 bg-orange-50 text-orange-700"}>{entry.returnedAt ? "Returned" : "Checked out"}</Badge></TableCell></TableRow>)}</TableBody></Table></div>
-                </> : <div className="grid min-h-64 place-items-center px-6 text-center text-slate-500">History will appear after the first device checkout.</div>}
+                  <div className="hidden md:block"><Table><TableHeader className="rabbit-table-head bg-muted"><TableRow><TableHead className="px-5">Device</TableHead><TableHead>Employee</TableHead><TableHead>Checked out</TableHead><TableHead>Returned</TableHead><TableHead className="px-5">Status</TableHead></TableRow></TableHeader><TableBody>{data.history.map((entry) => <TableRow key={entry.id} className="bg-card"><TableCell className="px-5 py-4"><div className="font-semibold">{entry.deviceName}</div><div className="text-sm text-muted-foreground">{entry.deviceModel}{entry.assetCode ? ` · ${entry.assetCode}` : ""}</div></TableCell><TableCell className="font-medium">{entry.employeeName}</TableCell><TableCell className="text-muted-foreground">{formatDate(entry.checkedOutAt)}</TableCell><TableCell className="text-muted-foreground">{formatDate(entry.returnedAt)}</TableCell><TableCell className="px-5"><Badge variant="outline" className={entry.returnedAt ? "border-border bg-muted text-muted-foreground" : "rabbit-status-out"}>{entry.returnedAt ? "Returned" : "Checked out"}</Badge></TableCell></TableRow>)}</TableBody></Table></div>
+                </> : <div className="grid min-h-64 place-items-center px-6 text-center text-muted-foreground">History will appear after the first device checkout.</div>}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="settings">
             <div className="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Plus className="size-5 text-blue-600" /> Add Device</CardTitle><p className="text-sm text-slate-500">For identical devices, enter the total number of units.</p></CardHeader>
+              <Card className="border-border shadow-none">
+                <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Plus className="size-5 text-[var(--green-site)]" /> Add Device</CardTitle><p className="text-sm text-muted-foreground">For identical devices, enter the total number of units.</p></CardHeader>
                 <CardContent>
                   <form onSubmit={addDevice} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Field label="Device type"><Select value={deviceCategory} onValueChange={(value) => setDeviceCategory(value as Device["category"])}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
+                    <Field label="Device type"><Select value={deviceCategory} onValueChange={(value) => setDeviceCategory(value as Device["category"])}><SelectTrigger className="w-full bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
                     <Field label="Name"><Input required minLength={2} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} placeholder="For example, iPhone" /></Field>
                     <Field label="Model"><Input required value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} placeholder="For example, 15 Pro" /></Field>
                     <Field label="OS version"><Input value={osVersion} onChange={(event) => setOsVersion(event.target.value)} placeholder="For example, iOS 18.2" /></Field>
                     <Field label="GPU"><Input value={gpu} onChange={(event) => setGpu(event.target.value)} placeholder="For example, Apple 6-core GPU" /></Field>
                     <Field label="SoC"><Input value={soc} onChange={(event) => setSoc(event.target.value)} placeholder="For example, Apple A17 Pro" /></Field>
-                    <Field label="Tier"><Select value={deviceTier} onValueChange={(value) => setDeviceTier(value as Device["tier"])}><SelectTrigger className="w-full bg-white"><SelectValue>{tierLabel(deviceTier)}</SelectValue></SelectTrigger><SelectContent><SelectItem value="Лоу">Low</SelectItem><SelectItem value="Медиум">Medium</SelectItem><SelectItem value="Хай">High</SelectItem></SelectContent></Select></Field>
+                    <Field label="Tier"><Select value={deviceTier} onValueChange={(value) => setDeviceTier(value as Device["tier"])}><SelectTrigger className="w-full bg-card"><SelectValue>{tierLabel(deviceTier)}</SelectValue></SelectTrigger><SelectContent><SelectItem value="Лоу">Low</SelectItem><SelectItem value="Медиум">Medium</SelectItem><SelectItem value="Хай">High</SelectItem></SelectContent></Select></Field>
                     <Field label="Quantity"><Input required type="number" min={1} max={100} value={quantity} onChange={(event) => setQuantity(event.target.value)} /></Field>
                     <Field label="Asset ID"><Input value={assetCode} onChange={(event) => setAssetCode(event.target.value)} placeholder="Optional" /></Field>
                     <div className="sm:col-span-2 lg:col-span-3"><Field label="Comment"><Input value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Accessories, condition, or an important note" /></Field></div>
                     <div className="sm:col-span-2 lg:col-span-3">
-                      <label className="grid gap-1.5 text-sm font-medium text-slate-700">Device photo
-                        <span className="flex min-h-28 cursor-pointer flex-col items-start gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50/50 sm:flex-row sm:items-center">
-                          <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-400">{photoPreview ? <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" /> : <ImageIcon className="size-7" />}</span>
-                          <span><span className="flex items-center gap-2 font-semibold text-blue-700"><Upload className="size-4" /> Choose photo</span><span className="mt-1 block text-xs font-normal text-slate-500">JPG, PNG, or WebP up to 5 MB</span>{photo && <span className="mt-1 block max-w-xs truncate text-xs font-normal text-slate-700">{photo.name}</span>}</span>
+                      <label className="grid gap-1.5 text-sm font-medium text-foreground">Device photo
+                        <span className="flex min-h-28 cursor-pointer flex-col items-start gap-4 rounded-none border border-dashed border-border bg-muted p-4 transition hover:border-primary hover:bg-accent/50 sm:flex-row sm:items-center">
+                          <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-none border border-border bg-card text-muted-foreground">{photoPreview ? <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" /> : <ImageIcon className="size-7" />}</span>
+                          <span><span className="flex items-center gap-2 font-semibold text-[var(--green-site)]"><Upload className="size-4" /> Choose photo</span><span className="mt-1 block text-xs font-normal text-muted-foreground">JPG, PNG, or WebP up to 5 MB</span>{photo && <span className="mt-1 block max-w-xs truncate text-xs font-normal text-foreground">{photo.name}</span>}</span>
                           <input key={photoInputKey} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setPhoto(event.target.files?.[0] || null)} />
                         </span>
                       </label>
                     </div>
-                    <div className="sm:col-span-2 lg:col-span-3"><Button disabled={saving} type="submit" className="w-full bg-[#1768e4] hover:bg-[#1058c8] sm:w-auto">{saving ? <Loader2 className="animate-spin" /> : <Plus />}Add device</Button></div>
+                    <div className="sm:col-span-2 lg:col-span-3"><Button disabled={saving} type="submit" className="w-full rabbit-primary-action sm:w-auto">{saving ? <Loader2 className="animate-spin" /> : <Plus />}Add device</Button></div>
                   </form>
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm">
-                <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Users className="size-5 text-blue-600" /> Employees</CardTitle></CardHeader>
+              <Card className="border-border shadow-none">
+                <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Users className="size-5 text-[var(--green-site)]" /> Employees</CardTitle></CardHeader>
                 <CardContent className="space-y-5">
                   <form onSubmit={addEmployee} className="flex gap-2"><Input required minLength={2} value={employeeName} onChange={(event) => setEmployeeName(event.target.value)} placeholder="First and last name" /><Button disabled={saving} type="submit" aria-label="Add employee">{saving ? <Loader2 className="animate-spin" /> : <Plus />}</Button></form>
                   {data.employees.length ? (
@@ -1191,17 +1244,17 @@ export default function Home() {
                           0,
                         );
                         return (
-                          <div key={employee.id} className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                          <div key={employee.id} className="flex min-h-14 items-center justify-between gap-3 rounded-none border border-border bg-muted px-3 py-2.5">
                             <div className="flex min-w-0 items-center gap-2.5">
-                              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white text-slate-500 shadow-sm"><UserRound className="size-4" /></span>
-                              <div className="min-w-0"><p className="truncate text-sm font-medium text-slate-800">{employee.name}</p>{activeLoans > 0 && <p className="text-xs text-orange-700">Checked out: {activeLoans}</p>}</div>
+                              <span className="grid size-8 shrink-0 place-items-center rounded-none bg-card text-muted-foreground shadow-none"><UserRound className="size-4" /></span>
+                              <div className="min-w-0"><p className="truncate text-sm font-medium text-foreground">{employee.name}</p>{activeLoans > 0 && <p className="text-xs rabbit-inline-warn">Checked out: {activeLoans}</p>}</div>
                             </div>
-                            <Button type="button" variant="ghost" size="icon-sm" className="shrink-0 text-slate-400 hover:bg-red-50 hover:text-red-700" aria-label={`Delete employee ${employee.name}`} title="Delete employee" onClick={() => setDeletingEmployee(employee)}><Trash2 /></Button>
+                            <Button type="button" variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground hover:bg-red-50 hover:text-red-700" aria-label={`Delete employee ${employee.name}`} title="Delete employee" onClick={() => setDeletingEmployee(employee)}><Trash2 /></Button>
                           </div>
                         );
                       })}
                     </div>
-                  ) : <p className="text-sm text-slate-500">Add employees so they can select their name when checking out a device.</p>}
+                  ) : <p className="text-sm text-muted-foreground">Add employees so they can select their name when checking out a device.</p>}
                 </CardContent>
               </Card>
             </div>
@@ -1217,7 +1270,7 @@ export default function Home() {
           </DialogHeader>
           {detailDevice && (
             <>
-              <div className="grid aspect-[16/9] w-full place-items-center overflow-hidden rounded-t-lg bg-slate-100 text-slate-400">
+              <div className="grid aspect-[16/9] w-full place-items-center overflow-hidden rounded-none bg-secondary text-muted-foreground">
                 {detailDevice.photoUrl ? (
                   <img src={detailDevice.photoUrl} alt={detailDevice.name} className="h-full w-full object-contain" />
                 ) : (
@@ -1225,7 +1278,7 @@ export default function Home() {
                 )}
               </div>
               <div className="p-5 sm:p-6">
-                <dl className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <dl className="overflow-hidden rounded-none border border-border bg-card">
                   <DetailRow label="Name">{detailDevice.name}</DetailRow>
                   <DetailRow label="Model">{detailDevice.model}</DetailRow>
                   <DetailRow label="Tier"><Badge variant="outline" className={tierClass(detailDevice.tier)}>{tierLabel(detailDevice.tier)}</Badge></DetailRow>
@@ -1235,10 +1288,10 @@ export default function Home() {
                   <DetailRow label="SoC">{detailDevice.soc || "Not specified"}</DetailRow>
                   <DetailRow label="Status">
                     <div>
-                      <Badge className={detailDevice.quantity - detailDevice.loans.length > 0 ? "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50" : "border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-50"}>
+                      <Badge className={detailDevice.quantity - detailDevice.loans.length > 0 ? "rabbit-status-ok" : "rabbit-status-out"}>
                         {detailDevice.quantity - detailDevice.loans.length > 0 ? `${detailDevice.quantity - detailDevice.loans.length} of ${detailDevice.quantity} in office` : `All ${detailDevice.quantity} checked out`}
                       </Badge>
-                      {detailDevice.loans.length > 0 && <p className="mt-2 text-sm text-slate-500">Checked out to: {detailDevice.loans.map((loan) => loan.employeeName).join(", ")}</p>}
+                      {detailDevice.loans.length > 0 && <p className="mt-2 text-sm text-muted-foreground">Checked out to: {detailDevice.loans.map((loan) => loan.employeeName).join(", ")}</p>}
                     </div>
                   </DetailRow>
                   {detailDevice.assetCode && <DetailRow label="Asset ID">{detailDevice.assetCode}</DetailRow>}
@@ -1261,28 +1314,28 @@ export default function Home() {
             <DialogDescription>Update the device information and save the card.</DialogDescription>
           </DialogHeader>
           <form onSubmit={updateDevice} className="grid gap-4 sm:grid-cols-2">
-            <Field label="Device type"><Select value={editValues.category} onValueChange={(category) => setEditValues((value) => ({ ...value, category: category as Device["category"] }))}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
+            <Field label="Device type"><Select value={editValues.category} onValueChange={(category) => setEditValues((value) => ({ ...value, category: category as Device["category"] }))}><SelectTrigger className="w-full bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="mobile">Mobile</SelectItem><SelectItem value="laptop">Laptop</SelectItem><SelectItem value="console">Console</SelectItem></SelectContent></Select></Field>
             <Field label="Name"><Input required minLength={2} value={editValues.name} onChange={(event) => setEditValues((value) => ({ ...value, name: event.target.value }))} /></Field>
             <Field label="Model"><Input required value={editValues.model} onChange={(event) => setEditValues((value) => ({ ...value, model: event.target.value }))} /></Field>
             <Field label="OS version"><Input value={editValues.osVersion} onChange={(event) => setEditValues((value) => ({ ...value, osVersion: event.target.value }))} /></Field>
             <Field label="GPU"><Input value={editValues.gpu} onChange={(event) => setEditValues((value) => ({ ...value, gpu: event.target.value }))} /></Field>
             <Field label="SoC"><Input value={editValues.soc} onChange={(event) => setEditValues((value) => ({ ...value, soc: event.target.value }))} /></Field>
-            <Field label="Tier"><Select value={editValues.tier} onValueChange={(tier) => setEditValues((value) => ({ ...value, tier: tier as Device["tier"] }))}><SelectTrigger className="w-full bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Лоу">Low</SelectItem><SelectItem value="Медиум">Medium</SelectItem><SelectItem value="Хай">High</SelectItem></SelectContent></Select></Field>
+            <Field label="Tier"><Select value={editValues.tier} onValueChange={(tier) => setEditValues((value) => ({ ...value, tier: tier as Device["tier"] }))}><SelectTrigger className="w-full bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Лоу">Low</SelectItem><SelectItem value="Медиум">Medium</SelectItem><SelectItem value="Хай">High</SelectItem></SelectContent></Select></Field>
             <Field label="Quantity"><Input required type="number" min={Math.max(1, editingDevice?.loans.length || 0)} max={100} value={editValues.quantity} onChange={(event) => setEditValues((value) => ({ ...value, quantity: event.target.value }))} /></Field>
             <Field label="Asset ID"><Input value={editValues.assetCode} onChange={(event) => setEditValues((value) => ({ ...value, assetCode: event.target.value }))} placeholder="Optional" /></Field>
             <div className="sm:col-span-2"><Field label="Comment"><Textarea rows={3} value={editValues.comment} onChange={(event) => setEditValues((value) => ({ ...value, comment: event.target.value }))} placeholder="Accessories, condition, or an important note" /></Field></div>
             <div className="sm:col-span-2">
-              <label className="grid gap-1.5 text-sm font-medium text-slate-700">Photo
-                <span className="flex cursor-pointer items-center gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 transition hover:border-blue-400 hover:bg-blue-50/50">
-                  <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-400">{editPhotoPreview ? <img src={editPhotoPreview} alt="Preview" className="h-full w-full object-cover" /> : <ImageIcon className="size-7" />}</span>
-                  <span className="min-w-0"><span className="flex items-center gap-2 font-semibold text-blue-700"><Upload className="size-4" /> Replace photo</span><span className="mt-1 block text-xs font-normal text-slate-500">JPG, PNG, or WebP up to 5 MB</span>{editPhoto && <span className="mt-1 block max-w-xs truncate text-xs font-normal text-slate-700">{editPhoto.name}</span>}</span>
+              <label className="grid gap-1.5 text-sm font-medium text-foreground">Photo
+                <span className="flex cursor-pointer items-center gap-4 rounded-none border border-dashed border-border bg-muted p-4 transition hover:border-primary hover:bg-accent/50">
+                  <span className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-none border border-border bg-card text-muted-foreground">{editPhotoPreview ? <img src={editPhotoPreview} alt="Preview" className="h-full w-full object-cover" /> : <ImageIcon className="size-7" />}</span>
+                  <span className="min-w-0"><span className="flex items-center gap-2 font-semibold text-[var(--green-site)]"><Upload className="size-4" /> Replace photo</span><span className="mt-1 block text-xs font-normal text-muted-foreground">JPG, PNG, or WebP up to 5 MB</span>{editPhoto && <span className="mt-1 block max-w-xs truncate text-xs font-normal text-foreground">{editPhoto.name}</span>}</span>
                   <input key={editPhotoInputKey} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => setEditPhoto(event.target.files?.[0] || null)} />
                 </span>
               </label>
             </div>
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" disabled={saving} onClick={() => setEditingDevice(null)}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-[#1768e4] hover:bg-[#1058c8]">{saving ? <Loader2 className="animate-spin" /> : <Pencil />}Save changes</Button>
+              <Button type="submit" disabled={saving} className="rabbit-primary-action">{saving ? <Loader2 className="animate-spin" /> : <Pencil />}Save changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1370,7 +1423,7 @@ export default function Home() {
     </DialogHeader>
 
     <Select value={employeeId} onValueChange={setEmployeeId}>
-      <SelectTrigger className="h-11 w-full min-w-0 bg-white [&>span]:min-w-0 [&>span]:truncate">
+      <SelectTrigger className="h-11 w-full min-w-0 bg-card [&>span]:min-w-0 [&>span]:truncate">
         <SelectValue placeholder="Select an employee" />
       </SelectTrigger>
 
@@ -1394,11 +1447,11 @@ export default function Home() {
 
     <div className="grid min-w-0 gap-1.5">
       <div className="flex items-center justify-between gap-3">
-        <label className="text-sm font-medium text-slate-700">
-          Comment <span className="font-normal text-slate-400">(optional)</span>
+        <label className="text-sm font-medium text-foreground">
+          Comment <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
 
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-muted-foreground">
           {checkoutComment.length}/500
         </span>
       </div>
@@ -1409,7 +1462,7 @@ export default function Home() {
         maxLength={500}
         rows={4}
         placeholder="Add a comment (max 500 characters)..."
-        className="min-h-24 w-full resize-none bg-white"
+        className="min-h-24 w-full resize-none bg-card"
       />
     </div>
 
@@ -1429,7 +1482,7 @@ export default function Home() {
       <Button
         disabled={saving || !employeeId}
         onClick={() => void confirmCheckout()}
-        className="w-full bg-[#1768e4] hover:bg-[#1058c8] sm:w-auto"
+        className="w-full rabbit-primary-action sm:w-auto"
       >
         {saving ? (
           <Loader2 className="animate-spin" />
@@ -1466,7 +1519,7 @@ export default function Home() {
     </DialogHeader>
 
     <Select value={loanId} onValueChange={setLoanId}>
-      <SelectTrigger className="h-11 w-full min-w-0 bg-white [&>span]:min-w-0 [&>span]:truncate">
+      <SelectTrigger className="h-11 w-full min-w-0 bg-card [&>span]:min-w-0 [&>span]:truncate">
         <SelectValue placeholder="Select an employee" />
       </SelectTrigger>
 
@@ -1520,8 +1573,8 @@ export default function Home() {
 }
 
 function MetricCard({ icon: Icon, label, value, tone }: { icon: typeof Boxes; label: string; value: number; tone: "blue" | "green" | "orange" | "slate" }) {
-  const tones = { blue: "bg-blue-50 text-blue-700", green: "bg-emerald-50 text-emerald-700", orange: "bg-orange-50 text-orange-700", slate: "bg-slate-100 text-slate-700" };
-  return <Card className="border-slate-200 bg-white shadow-sm"><CardContent className="flex min-h-28 flex-col justify-between gap-3 p-4 sm:min-h-0 sm:flex-row sm:items-center sm:p-5"><div><p className="text-xs font-medium leading-tight text-slate-500 sm:text-sm">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{value}</p></div><div className={`grid size-9 place-items-center self-end rounded-xl sm:size-11 sm:self-auto sm:rounded-2xl ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div></CardContent></Card>;
+  const tones = { blue: "rabbit-metric-primary", green: "rabbit-metric-success", orange: "rabbit-metric-warning", slate: "rabbit-metric-neutral" };
+  return <Card className="border-border bg-card shadow-none"><CardContent className="flex min-h-28 flex-col justify-between gap-3 p-4 sm:min-h-0 sm:flex-row sm:items-center sm:p-5"><div><p className="text-xs font-medium leading-tight text-muted-foreground sm:text-sm">{label}</p><p className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{value}</p></div><div className={`grid size-9 place-items-center self-end rounded-none sm:size-11 sm:self-auto sm:rounded-none ${tones[tone]}`}><Icon className="size-4 sm:size-5" /></div></CardContent></Card>;
 }
 
 function CheckoutCommentList({ loans, className = "" }: { loans: Loan[]; className?: string }) {
@@ -1533,20 +1586,20 @@ function CheckoutCommentList({ loans, className = "" }: { loans: Loan[]; classNa
       {commentedLoans.map((loan) => (
         <div
           key={loan.id}
-          className="min-w-0 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-left"
+          className="rabbit-checkout-comment min-w-0 px-3 py-2 text-left"
         >
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">
               Checkout comment
             </span>
             {commentedLoans.length > 1 && (
-              <span className="min-w-0 truncate text-[11px] text-orange-600">
+              <span className="min-w-0 truncate text-[11px] text-muted-foreground">
                 {loan.employeeName}
               </span>
             )}
           </div>
           <p
-            className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-5 text-slate-700"
+            className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-5 text-foreground"
             title={loan.checkoutComment || undefined}
           >
             {loan.checkoutComment}
@@ -1572,24 +1625,24 @@ function MobileDeviceCard({
 }) {
   const free = device.quantity - device.loans.length;
   return (
-    <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="min-w-0 max-w-full overflow-hidden border border-border bg-card p-4 shadow-none">
       <button type="button" onClick={onOpen} className="flex min-w-0 w-full items-start gap-3 text-left" aria-label={`Open ${device.name} ${device.model} details`}>
-        <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
+        <span className="rabbit-photo-frame grid size-16 shrink-0 place-items-center overflow-hidden border border-border bg-muted text-muted-foreground">
           {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : device.category === "console" ? <Gamepad2 className="size-7" /> : <Laptop className="size-7" />}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-semibold text-slate-950">{device.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-sm text-slate-500">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}</span>
+          <span className="block truncate font-semibold text-foreground">{device.name}</span>
+          <span className="mt-0.5 block min-w-0 truncate text-sm text-muted-foreground">{device.model}{device.osVersion ? ` · ${device.osVersion}` : ""}</span>
           <span className="mt-2 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge>
-            <span className={`text-xs font-semibold ${free > 0 ? "text-emerald-700" : "text-orange-700"}`}>{free} of {device.quantity} in office</span>
+            <span className={`text-xs font-semibold ${free > 0 ? "rabbit-inline-ok" : "rabbit-inline-warn"}`}>{free} of {device.quantity} in office</span>
           </span>
         </span>
       </button>
 
-      {device.comment && <p className="mt-3 line-clamp-2 text-sm text-slate-500">{device.comment}</p>}
+      {device.comment && <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{device.comment}</p>}
       {device.loans.length > 0 && (
-        <div className="mt-3 min-w-0 overflow-hidden rounded-xl bg-orange-50 px-3 py-2.5 text-sm text-orange-900">
+        <div className="rabbit-loan-block mt-3 min-w-0 overflow-hidden px-3 py-2.5 text-sm">
           <div className="min-w-0 truncate">
             <span className="font-semibold">Checked out to:</span>{" "}
             {device.loans.map((loan) => loan.employeeName).join(", ")}
@@ -1606,7 +1659,7 @@ function MobileDeviceCard({
         )}
         {free > 0 && (
           <Button
-            className={`${device.loans.length ? "" : "col-span-2"} min-w-0 w-full bg-[#1768e4] hover:bg-[#1058c8]`}
+            className={`${device.loans.length ? "" : "col-span-2"} min-w-0 w-full rabbit-primary-action`}
             disabled={!employeesAvailable}
             onClick={onCheckout}
           >
@@ -1622,25 +1675,25 @@ function MobileDeviceCard({
 function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: () => void; onDelete: () => void }) {
   const free = device.quantity - device.loans.length;
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-start gap-4 border-b border-slate-100 p-4 sm:p-5">
-        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-slate-400 sm:size-24">
+    <article className="overflow-hidden border border-border bg-card shadow-none">
+      <div className="flex items-start gap-4 border-b border-border p-4 sm:p-5">
+        <div className="rabbit-photo-frame grid size-20 shrink-0 place-items-center overflow-hidden border border-border bg-muted text-muted-foreground sm:size-24">
           {device.photoUrl ? <img src={device.photoUrl} alt={device.name} className="h-full w-full object-cover" /> : device.category === "console" ? <Gamepad2 className="size-8" /> : <Laptop className="size-8" />}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <h3 className="break-words text-lg font-semibold text-slate-950">{device.name}</h3>
-              <p className="break-words text-sm text-slate-500">{device.model}</p>
+              <h3 className="break-words text-lg font-semibold text-foreground">{device.name}</h3>
+              <p className="break-words text-sm text-muted-foreground">{device.model}</p>
             </div>
             <Badge variant="outline" className={tierClass(device.tier)}>{tierLabel(device.tier)}</Badge>
           </div>
-          <Badge className={free > 0 ? "mt-3 border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50" : "mt-3 border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-50"}>
+          <Badge className={free > 0 ? "mt-3 rabbit-status-ok" : "mt-3 rabbit-status-out"}>
             {free > 0 ? `${free} of ${device.quantity} in office` : `All ${device.quantity} checked out`}
           </Badge>
         </div>
       </div>
-      <dl className="divide-y divide-slate-100 text-sm">
+      <dl className="divide-y divide-border text-sm">
         <ListRow label="Device type" value={deviceCategoryLabel(device.category)} />
         <ListRow label="OS version" value={device.osVersion || "Not specified"} />
         <ListRow label="GPU" value={device.gpu || "Not specified"} />
@@ -1650,16 +1703,16 @@ function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: 
         <ListRow label="Available" value={`${free}`} />
         <ListRow label="Comment" value={device.comment || "No comment"} />
         <div className="grid gap-2 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:px-5">
-          <dt className="font-medium text-slate-500">Checked out to</dt>
-          <dd className="text-slate-800">
+          <dt className="font-medium text-muted-foreground">Checked out to</dt>
+          <dd className="text-foreground">
             {device.loans.length ? (
               <div className="space-y-2">
                 {device.loans.map((loan) => (
                   <div key={loan.id}>
                     <span className="font-medium">{loan.employeeName}</span>
-                    <span className="block text-xs text-slate-500">since {formatDate(loan.checkedOutAt)}</span>
+                    <span className="block text-xs text-muted-foreground">since {formatDate(loan.checkedOutAt)}</span>
                     {loan.checkoutComment?.trim() && (
-                      <p className="mt-1 max-w-xl whitespace-pre-wrap break-words text-sm text-slate-700">
+                      <p className="mt-1 max-w-xl whitespace-pre-wrap break-words text-sm text-foreground">
                         {loan.checkoutComment}
                       </p>
                     )}
@@ -1670,28 +1723,28 @@ function FullDeviceCard({ device, onEdit, onDelete }: { device: Device; onEdit: 
           </dd>
         </div>
       </dl>
-      <div className="grid grid-cols-2 gap-2 border-t border-slate-100 bg-slate-50 p-3 sm:p-4">
-        <Button variant="outline" className="bg-white" onClick={onEdit}><Pencil /> Edit</Button>
-        <Button variant="outline" className="border-red-200 bg-white text-red-700 hover:bg-red-50 hover:text-red-800" onClick={onDelete}><Trash2 /> Delete</Button>
+      <div className="grid grid-cols-2 gap-2 border-t border-border bg-muted p-3 sm:p-4">
+        <Button variant="outline" className="bg-card" onClick={onEdit}><Pencil /> Edit</Button>
+        <Button variant="outline" className="border-red-200 bg-card text-red-700 hover:bg-red-50 hover:text-red-800" onClick={onDelete}><Trash2 /> Delete</Button>
       </div>
     </article>
   );
 }
 
 function ListRow({ label, value }: { label: string; value: string }) {
-  return <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:px-5"><dt className="font-medium text-slate-500">{label}</dt><dd className="break-words text-slate-800">{value}</dd></div>;
+  return <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:px-5"><dt className="font-medium text-muted-foreground">{label}</dt><dd className="break-words text-foreground">{value}</dd></div>;
 }
 
 function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
   return (
-    <article className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="min-w-0 max-w-full overflow-hidden border border-border bg-card p-4 shadow-none">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-slate-950">
+          <p className="truncate font-semibold text-foreground">
             {entry.deviceName}
           </p>
 
-          <p className="truncate text-sm text-slate-500">
+          <p className="truncate text-sm text-muted-foreground">
             {entry.deviceModel}
             {entry.assetCode ? ` · ${entry.assetCode}` : ""}
           </p>
@@ -1701,22 +1754,22 @@ function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
           variant="outline"
           className={`shrink-0 ${
             entry.returnedAt
-              ? "border-slate-200 bg-slate-50 text-slate-600"
-              : "border-orange-200 bg-orange-50 text-orange-700"
+              ? "border-border bg-muted text-muted-foreground"
+              : "rabbit-status-out"
           }`}
         >
           {entry.returnedAt ? "Returned" : "Checked out"}
         </Badge>
       </div>
 
-      <div className="mt-4 grid min-w-0 gap-3 border-t border-slate-100 pt-3 text-sm">
+      <div className="mt-4 grid min-w-0 gap-3 border-t border-border pt-3 text-sm">
         <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className="shrink-0 text-slate-500">
+          <span className="shrink-0 text-muted-foreground">
             Employee
           </span>
 
           <span
-            className="min-w-0 flex-1 truncate text-right font-medium text-slate-800"
+            className="min-w-0 flex-1 truncate text-right font-medium text-foreground"
             title={entry.employeeName}
           >
             {entry.employeeName}
@@ -1724,12 +1777,12 @@ function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
         </div>
 
         <div className="flex min-w-0 items-start justify-between gap-3">
-          <span className="shrink-0 text-slate-500">
+          <span className="shrink-0 text-muted-foreground">
             Checked out
           </span>
 
           <span
-            className="min-w-0 flex-1 truncate text-right text-slate-700"
+            className="min-w-0 flex-1 truncate text-right text-foreground"
             title={formatDate(entry.checkedOutAt)}
           >
             {formatDate(entry.checkedOutAt)}
@@ -1738,12 +1791,12 @@ function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
 
         {entry.returnedAt && (
           <div className="flex min-w-0 items-start justify-between gap-3">
-            <span className="shrink-0 text-slate-500">
+            <span className="shrink-0 text-muted-foreground">
               Returned
             </span>
 
             <span
-              className="min-w-0 flex-1 truncate text-right text-slate-700"
+              className="min-w-0 flex-1 truncate text-right text-foreground"
               title={formatDate(entry.returnedAt)}
             >
               {formatDate(entry.returnedAt)}
@@ -1756,13 +1809,13 @@ function MobileHistoryCard({ entry }: { entry: HistoryEntry }) {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="grid gap-1.5 text-sm font-medium text-slate-700">{label}{children}</label>;
+  return <label className="grid gap-1.5 text-sm font-medium text-foreground">{label}{children}</label>;
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="grid gap-1 border-b border-slate-100 px-4 py-3.5 last:border-b-0 sm:grid-cols-[170px_1fr] sm:gap-5"><dt className="text-sm font-medium text-slate-500">{label}</dt><dd className="min-w-0 font-medium text-slate-900">{children}</dd></div>;
+  return <div className="grid gap-1 border-b border-border px-4 py-3.5 last:border-b-0 sm:grid-cols-[170px_1fr] sm:gap-5"><dt className="text-sm font-medium text-muted-foreground">{label}</dt><dd className="min-w-0 font-medium text-foreground">{children}</dd></div>;
 }
 
 function EmptyState({ hasDevices, onOpenSettings }: { hasDevices: boolean; onOpenSettings: () => void }) {
-  return <div className="grid min-h-72 place-items-center px-6 py-12 text-center"><div><div className="mx-auto grid size-14 place-items-center rounded-2xl bg-blue-50 text-blue-600">{hasDevices ? <Search className="size-6" /> : <Laptop className="size-6" />}</div><h2 className="mt-4 text-lg font-semibold">{hasDevices ? "No results found" : "Add your first device"}</h2><p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">{hasDevices ? "Change the search query or selected filter." : "After you add a device, it will appear in the inventory and become available for checkout."}</p>{!hasDevices && <Button className="mt-5" onClick={onOpenSettings}><Settings2 /> Go to Add</Button>}</div></div>;
+  return <div className="grid min-h-72 place-items-center px-6 py-12 text-center"><div><div className="mx-auto grid size-14 place-items-center border border-border bg-accent text-primary">{hasDevices ? <Search className="size-6" /> : <Laptop className="size-6" />}</div><h2 className="mt-4 text-lg font-semibold">{hasDevices ? "No results found" : "Add your first device"}</h2><p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{hasDevices ? "Change the search query or selected filter." : "After you add a device, it will appear in the inventory and become available for checkout."}</p>{!hasDevices && <Button className="rabbit-primary-action mt-5" onClick={onOpenSettings}><Settings2 /> Go to Add</Button>}</div></div>;
 }

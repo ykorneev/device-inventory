@@ -1,32 +1,101 @@
+@import url("https://fonts.googleapis.com/css2?family=Play:wght@700&family=Roboto:wght@400;500;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 
-:root {
-  --background: #f3f6fb;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #1768e4;
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand-black: #0f0f0f;
+  --brand-ice: #e8f6fe;
+  --brand-green: #08923b;
+  --green-site: #219f4c;
+  --green-hover: #00571e;
+  --green-active: #00260d;
+  --signal-cyan: #05e1ef;
+  --gray-text: #9d9d9d;
+  --gray-line: #909090;
+  --surface-raised: #1a1a1a;
+
+  --background: #0f0f0f;
+  --foreground: #e8f6fe;
+  --card: #1a1a1a;
+  --card-foreground: #e8f6fe;
+  --popover: #1a1a1a;
+  --popover-foreground: #e8f6fe;
+  --primary: #08923b;
   --primary-foreground: #ffffff;
-  --secondary: #eef3f9;
-  --secondary-foreground: #19324f;
-  --muted: #eef3f9;
-  --muted-foreground: #64748b;
-  --accent: #e7f0ff;
-  --accent-foreground: #174a8b;
+  --secondary: #171717;
+  --secondary-foreground: #e8f6fe;
+  --muted: #151515;
+  --muted-foreground: #9d9d9d;
+  --accent: #102319;
+  --accent-foreground: #e8f6fe;
   --destructive: #dc2626;
-  --border: #dbe3ee;
-  --input: #dbe3ee;
-  --ring: #5b9af5;
-  --chart-1: #1768e4;
-  --chart-2: #059669;
-  --chart-3: #ea580c;
+  --border: #343434;
+  --input: #3a3a3a;
+  --ring: #08923b;
+  --chart-1: #08923b;
+  --chart-2: #05e1ef;
+  --chart-3: #d97706;
   --chart-4: #7c3aed;
-  --chart-5: #0f766e;
-  --radius: 0.75rem;
+  --chart-5: #219f4c;
+  --radius: 0.25rem;
+
+  --app-header: #0f0f0f;
+  --app-panel: #1a1a1a;
+  --app-panel-muted: #151515;
+  --app-table-head: #202525;
+  --app-hover: #202820;
+  --app-green-soft: #0b2b18;
+  --app-orange-soft: #2b1c0b;
+  --app-danger-soft: #2a1111;
+  --app-divider: #343434;
+  --app-muted-strong: #b9c4c9;
+  --app-control: #151515;
+  --app-control-hover: #202020;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f5f8fa;
+  --foreground: #0f0f0f;
+  --card: #ffffff;
+  --card-foreground: #0f0f0f;
+  --popover: #ffffff;
+  --popover-foreground: #0f0f0f;
+  --primary: #08923b;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f6fe;
+  --secondary-foreground: #0f0f0f;
+  --muted: #f0f6f9;
+  --muted-foreground: #5a5f63;
+  --accent: #e8f6fe;
+  --accent-foreground: #00571e;
+  --destructive: #c62828;
+  --border: #d5dfe5;
+  --input: #cfd9df;
+  --ring: #08923b;
+  --chart-1: #08923b;
+  --chart-2: #005f66;
+  --chart-3: #a95f00;
+  --chart-4: #6d28d9;
+  --chart-5: #00571e;
+
+  --app-header: #ffffff;
+  --app-panel: #ffffff;
+  --app-panel-muted: #f7fafc;
+  --app-table-head: #f3f7f9;
+  --app-hover: #eef7f1;
+  --app-green-soft: #e6f5eb;
+  --app-orange-soft: #fff4e8;
+  --app-danger-soft: #fff0f0;
+  --app-divider: #d5dfe5;
+  --app-muted-strong: #4f5a60;
+  --app-control: #ffffff;
+  --app-control-hover: #f4f7f8;
 }
 
 @theme inline {
@@ -53,15 +122,19 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Inter Variable", Inter, Arial, Helvetica, sans-serif;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 8px;
+  --font-sans: "Roboto", "Inter Variable", Inter, Arial, Helvetica, sans-serif;
 }
 
 * {
   border-color: var(--border);
+}
+
+html {
+  background: var(--background);
 }
 
 body {
@@ -69,22 +142,156 @@ body {
   min-width: 320px;
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter Variable", Inter, Arial, Helvetica, sans-serif;
-  font-optical-sizing: auto;
+  font-family: "Roboto", "Inter Variable", Inter, Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 h1,
-h2,
-h3,
-h4,
-.device-tabs-trigger {
-  font-family: "Space Grotesk Variable", "Space Grotesk", "Inter Variable", sans-serif;
+h2 {
+  font-family: "Space Grotesk Variable", "Space Grotesk", "Roboto", Arial, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
+h3,
+h4 {
+  font-family: "Roboto", "Inter Variable", Arial, sans-serif;
+  font-weight: 700;
+}
+
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
+}
+
+/* Rabbit Games: CTA/button typography. Navigation tabs intentionally use body font. */
+[data-slot="button"] {
+  font-family: "Play", "Space Grotesk Variable", "Roboto", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.device-tabs-trigger {
+  font-family: "Roboto", "Inter Variable", Arial, sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.rabbit-app {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.rabbit-app [data-slot="card"],
+.rabbit-app [data-slot="dialog-content"],
+.rabbit-app [data-slot="alert-dialog-content"] {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.rabbit-app [data-slot="dialog-content"],
+.rabbit-app [data-slot="alert-dialog-content"] {
+  background: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+
+.rabbit-app [data-slot="input"],
+.rabbit-app [data-slot="select-trigger"],
+.rabbit-app textarea {
+  background: var(--app-control);
+  color: var(--foreground);
+  border-color: var(--input);
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.rabbit-app [data-slot="input"]::placeholder,
+.rabbit-app textarea::placeholder {
+  color: var(--muted-foreground);
+}
+
+.rabbit-app [data-slot="table-row"] {
+  border-color: var(--border);
+}
+
+.rabbit-app [data-slot="table-head"] {
+  color: var(--muted-foreground);
+}
+
+.rabbit-app [data-slot="button"][data-variant="outline"] {
+  background: transparent;
+}
+
+.rabbit-app .brand-heading {
+  font-family: "Space Grotesk Variable", "Space Grotesk", "Roboto", Arial, sans-serif;
+  font-weight: 700;
+}
+
+.rabbit-app .brand-kicker {
+  font-family: "Space Grotesk Variable", "Space Grotesk", "Roboto", Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.rabbit-header {
+  background: var(--app-header);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.rabbit-mark {
+  background: var(--card);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 55%, var(--border));
+  border-radius: 0;
+}
+
+.rabbit-theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: var(--card);
+}
+
+.rabbit-theme-switch button {
+  display: grid;
+  width: 34px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.rabbit-theme-switch button[aria-pressed="true"] {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.rabbit-theme-switch button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.rabbit-internal-dot {
+  background: var(--primary);
 }
 
 .device-tabs-list {
@@ -92,11 +299,220 @@ input {
   box-sizing: border-box;
   align-items: stretch;
   overflow: hidden !important;
+  border-radius: 0 !important;
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
 }
 
 .device-tabs-list .device-tabs-trigger {
-  height: 2.5rem !important;
-  min-height: 2.5rem;
-  max-height: 2.5rem;
+  height: 2.75rem !important;
+  min-height: 2.75rem;
+  max-height: 2.75rem;
   box-sizing: border-box;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--muted-foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+.device-tabs-list .device-tabs-trigger:hover {
+  background: var(--app-control-hover) !important;
+  color: var(--foreground) !important;
+}
+
+.device-tabs-list .device-tabs-trigger[data-state="active"] {
+  border-color: var(--primary) !important;
+  background: var(--app-green-soft) !important;
+  color: var(--foreground) !important;
+  box-shadow: inset 3px 0 0 var(--primary) !important;
+}
+
+.rabbit-panel-header {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+.rabbit-table-head {
+  background: var(--app-table-head) !important;
+}
+
+.rabbit-row {
+  background: var(--card) !important;
+}
+
+.rabbit-row:hover {
+  background: var(--app-hover) !important;
+}
+
+.rabbit-primary-action {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+}
+
+.rabbit-primary-action:hover {
+  background: var(--green-hover) !important;
+}
+
+.rabbit-primary-action:active {
+  background: var(--green-active) !important;
+}
+
+.rabbit-secondary-action {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.rabbit-secondary-action:hover {
+  background: var(--app-control-hover) !important;
+}
+
+.rabbit-status-ok {
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent) !important;
+  background: var(--app-green-soft) !important;
+  color: color-mix(in srgb, var(--primary) 68%, var(--foreground)) !important;
+}
+
+:root[data-theme="light"] .rabbit-status-ok {
+  color: #00571e !important;
+}
+
+.rabbit-status-out {
+  border: 1px solid #8a4b10 !important;
+  background: var(--app-orange-soft) !important;
+  color: #f0a33a !important;
+}
+
+:root[data-theme="light"] .rabbit-status-out {
+  color: #8a4b10 !important;
+}
+
+.rabbit-tier-high {
+  border-color: #6f42c1 !important;
+  background: color-mix(in srgb, #6f42c1 18%, transparent) !important;
+  color: color-mix(in srgb, #a985ff 85%, var(--foreground)) !important;
+}
+
+.rabbit-tier-medium {
+  border-color: #9a6400 !important;
+  background: color-mix(in srgb, #d58a00 16%, transparent) !important;
+  color: #e6a22d !important;
+}
+
+:root[data-theme="light"] .rabbit-tier-medium {
+  color: #805000 !important;
+}
+
+.rabbit-tier-low {
+  border-color: var(--border) !important;
+  background: var(--secondary) !important;
+  color: var(--muted-foreground) !important;
+}
+
+.rabbit-checkout-comment {
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--primary);
+  border-radius: 0;
+  background: var(--app-panel-muted);
+  color: var(--foreground);
+}
+
+.rabbit-loan-block {
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--primary);
+  border-radius: 0;
+  background: var(--app-panel-muted);
+  color: var(--foreground);
+}
+
+.rabbit-photo-frame {
+  border-radius: 0 !important;
+  border-color: var(--border) !important;
+  background: var(--app-panel-muted) !important;
+  color: var(--muted-foreground) !important;
+}
+
+.rabbit-progress-track {
+  background: color-mix(in srgb, var(--muted-foreground) 32%, transparent) !important;
+}
+
+.rabbit-progress-bar {
+  background: var(--primary) !important;
+}
+
+.rabbit-muted-panel {
+  background: var(--app-panel-muted) !important;
+}
+
+.rabbit-app .text-muted-brand {
+  color: var(--muted-foreground) !important;
+}
+
+.rabbit-app .text-main-brand {
+  color: var(--foreground) !important;
+}
+
+.rabbit-app a,
+.rabbit-app .brand-link {
+  color: var(--green-site);
+}
+
+.rabbit-app ::selection {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+@media (max-width: 639px) {
+  .rabbit-theme-switch button {
+    width: 30px;
+    height: 28px;
+  }
+}
+
+.rabbit-metric-primary {
+  background: var(--app-green-soft) !important;
+  color: var(--primary) !important;
+}
+
+.rabbit-metric-success {
+  background: var(--app-green-soft) !important;
+  color: color-mix(in srgb, var(--primary) 72%, var(--foreground)) !important;
+}
+
+:root[data-theme="light"] .rabbit-metric-success,
+:root[data-theme="light"] .rabbit-metric-primary {
+  color: #00571e !important;
+}
+
+.rabbit-metric-warning {
+  background: var(--app-orange-soft) !important;
+  color: #f0a33a !important;
+}
+
+:root[data-theme="light"] .rabbit-metric-warning {
+  color: #8a4b10 !important;
+}
+
+.rabbit-metric-neutral {
+  background: var(--secondary) !important;
+  color: var(--foreground) !important;
+}
+
+.rabbit-inline-ok {
+  color: #41c975 !important;
+}
+
+:root[data-theme="light"] .rabbit-inline-ok {
+  color: #00571e !important;
+}
+
+.rabbit-inline-warn {
+  color: #f0a33a !important;
+}
+
+:root[data-theme="light"] .rabbit-inline-warn {
+  color: #8a4b10 !important;
 }
