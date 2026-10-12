@@ -832,7 +832,11 @@ export default function Home() {
       <header className="rabbit-header border-b">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="rabbit-mark grid size-11 shrink-0 place-items-center"><Laptop className="size-6" /></div>
+            <img
+              src={theme === "dark" ? "/rabbit-logo-dark.svg" : "/rabbit-logo-light.svg"}
+              alt="Rabbit Games"
+              className="size-11 shrink-0 object-contain"
+            />
             <div className="min-w-0">
               <p className="brand-kicker truncate text-xs">Office inventory</p>
               <h1 className="brand-heading truncate text-xl sm:text-2xl">Test Devices</h1>
